@@ -66,7 +66,11 @@ The frontend is served on [http://localhost:5173](http://localhost:5173).
    docker compose up --build
    ```
 
-If you need runtime-only substitution without rebuilding, add an entrypoint script that rewrites a config file before Nginx starts.
+### CORS note for separate frontend/backend deployments
+
+If frontend and API are hosted on different origins, backend CORS must explicitly allow the exact frontend origin, for example:
+
+- `https://gearboxd.davidortegafarrerons.com` (no trailing slash)
 
 ## Routes
 
