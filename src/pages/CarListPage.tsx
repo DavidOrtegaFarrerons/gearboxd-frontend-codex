@@ -47,7 +47,7 @@ export default function CarListPage() {
             <article className="card" key={car.id}>
               <span className="badge">{car.year}</span>
               <h3>{car.make} {car.model}</h3>
-              <p>Mileage: {car.mileage.toLocaleString()} mi</p>
+              <p>{car.gearbox} · {car.drivetrain} · {car.horsepower} hp</p>
               <Link to={`/cars/${car.id}`}>View details</Link>
             </article>
           ))}

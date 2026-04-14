@@ -1,7 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { deleteCar } from '../api/cars';
-
-const TOKEN_STORAGE_KEY = 'gearboxd-token';
+import { getSessionToken } from '../state/sessionToken';
 
 export default function DeleteCarPage() {
   const [carId, setCarId] = useState('');
@@ -13,7 +12,7 @@ export default function DeleteCarPage() {
     setMessage(null);
     setError(null);
 
-    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    const token = getSessionToken();
     if (!token) {
       setError('Missing token. Log in first.');
       return;

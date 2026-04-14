@@ -1,7 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom';
+import { getSessionToken } from '../state/sessionToken';
 
 function hasToken() {
-  return Boolean(localStorage.getItem('gearboxd-token'));
+  return Boolean(getSessionToken());
 }
 
 export default function ProtectedRoute() {
