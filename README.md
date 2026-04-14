@@ -6,8 +6,9 @@ A starter frontend for Gearboxd with public/auth/protected routes, a car-themed 
 
 - Node.js 18+
 - npm 9+
+- Docker (optional, for containerized runs)
 
-## Getting Started
+## Getting Started (Local Development)
 
 1. Install dependencies:
 
@@ -18,7 +19,7 @@ A starter frontend for Gearboxd with public/auth/protected routes, a car-themed 
 2. Configure environment variables by creating a `.env` file at the repository root:
 
    ```bash
-   VITE_API_BASE_URL=http://localhost:8080
+   VITE_API_BASE_URL=http://localhost:4000
    ```
 
 3. Start the dev server:
@@ -38,6 +39,34 @@ A starter frontend for Gearboxd with public/auth/protected routes, a car-themed 
    ```bash
    npm run preview
    ```
+
+## Docker
+
+Run the app with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+The frontend is served on [http://localhost:5173](http://localhost:5173).
+
+### Configure backend endpoint
+
+`VITE_API_BASE_URL` is used by Vite at **build time**. The Docker setup passes this value as a build argument, so changing the backend endpoint requires a rebuild.
+
+1. Update your `.env` (or export it in shell):
+
+   ```bash
+   VITE_API_BASE_URL=http://localhost:4000
+   ```
+
+2. Rebuild and start:
+
+   ```bash
+   docker compose up --build
+   ```
+
+If you need runtime-only substitution without rebuilding, add an entrypoint script that rewrites a config file before Nginx starts.
 
 ## Routes
 
@@ -61,7 +90,10 @@ A starter frontend for Gearboxd with public/auth/protected routes, a car-themed 
 
 ## Project Structure
 
-- `src/api/` API client modules (`client.ts`, `cars.ts`, `auth.ts`)
-- `src/types/` type definitions for car and auth payloads
+- `src/api/http.ts` shared HTTP wrapper with API base URL, auth header injection, and normalized errors
+- `src/api/cars.ts` typed car APIs for listing/detail/create/update/delete
+- `src/api/users.ts` user registration/activation APIs
+- `src/api/auth.ts` authentication token API
+- `src/types/` type definitions for shared payloads
 - `src/components/` layout and protected route components
 - `src/pages/` route pages
