@@ -1,8 +1,19 @@
-import { apiClient } from './client';
-import type { ActivatePayload, AuthTokenResponse, LoginPayload, RegisterPayload } from '../types/auth';
+import { http } from './http';
 
-export const authApi = {
-  register: (payload: RegisterPayload) => apiClient.post<void>('/auth/register', payload),
-  activate: (payload: ActivatePayload) => apiClient.post<void>('/auth/activate', payload),
-  login: (payload: LoginPayload) => apiClient.post<AuthTokenResponse>('/auth/token', payload)
+export type AuthenticationTokenPayload = {
+  email: string;
+  password: string;
 };
+
+export type AuthenticationTokenResponse = {
+  token: string;
+};
+
+export function getAuthenticationToken(
+  payload: AuthenticationTokenPayload,
+): Promise<AuthenticationTokenResponse> {
+  return http<AuthenticationTokenResponse>('/v1/tokens/authentication', {
+    method: 'POST',
+    body: payload,
+  });
+}
