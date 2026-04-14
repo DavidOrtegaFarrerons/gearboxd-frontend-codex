@@ -1,0 +1,137 @@
+:root {
+  color-scheme: dark;
+  --bg-0: #06080f;
+  --bg-1: #0c1220;
+  --bg-2: #121a2e;
+  --card: #131e36;
+  --text: #f2f5ff;
+  --muted: #a7b2d1;
+  --accent: #52b6ff;
+  --accent-2: #7af7c8;
+  --danger: #ff6b81;
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background: radial-gradient(circle at top, #1a2c4f 0%, var(--bg-0) 55%) fixed;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.9rem 1.2rem;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(90deg, rgba(10, 17, 32, 0.96), rgba(12, 24, 49, 0.8));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logo {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+}
+
+nav a.active,
+nav a:hover {
+  color: var(--text);
+  background: rgba(82, 182, 255, 0.2);
+}
+
+.container {
+  width: min(1024px, 100% - 2rem);
+  margin: 2rem auto;
+}
+
+.hero {
+  padding: 2rem;
+  border-radius: 1rem;
+  background: linear-gradient(130deg, rgba(82, 182, 255, 0.22), rgba(122, 247, 200, 0.18), rgba(17, 23, 40, 0.7));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent-2);
+  font-size: 0.74rem;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.card {
+  background: linear-gradient(180deg, rgba(21, 35, 62, 0.9), rgba(16, 26, 46, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.85rem;
+  padding: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.badge {
+  display: inline-block;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  margin-bottom: 0.5rem;
+  background: rgba(82, 182, 255, 0.2);
+  color: var(--accent);
+}
+
+.form-card form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+input,
+button {
+  border-radius: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(6, 8, 15, 0.45);
+  color: var(--text);
+  padding: 0.68rem 0.75rem;
+}
+
+button {
+  cursor: pointer;
+  background: linear-gradient(90deg, rgba(82, 182, 255, 0.8), rgba(122, 247, 200, 0.75));
+  color: #081020;
+  font-weight: 600;
+}
+
+button.danger {
+  background: linear-gradient(90deg, #ff6b81, #ff9a8b);
+  color: white;
+}
