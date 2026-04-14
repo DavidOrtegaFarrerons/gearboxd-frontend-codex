@@ -1,27 +1,59 @@
-const featuredCars = [
-  { id: '1', title: '2022 Porsche 911 Carrera', badge: 'Featured', blurb: 'Precision-tuned, track-capable comfort.' },
-  { id: '2', title: '2020 BMW M340i xDrive', badge: 'New Arrival', blurb: 'Balanced power and everyday luxury.' },
-  { id: '3', title: '1969 Ford Mustang Boss 302', badge: 'Classic', blurb: 'American muscle heritage, restored.' }
-];
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Car, listCars } from '../api/cars';
 
 export default function CarListPage() {
+  const [cars, setCars] = useState<Car[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCars = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await listCars({ page: 1, pageSize: 24 });
+        setCars(response.items);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load cars.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadCars();
+  }, []);
+
   return (
     <section>
       <div className="hero">
         <p className="eyebrow">Public Inventory</p>
         <h1>Find Your Next Driver&apos;s Car</h1>
-        <p>Browse curated performance vehicles, classics, and daily machines—all in one garage.</p>
+        <p>Inventory is loaded live from the Gearboxd API.</p>
       </div>
 
-      <div className="card-grid">
-        {featuredCars.map((car) => (
-          <article className="card" key={car.id}>
-            <span className="badge">{car.badge}</span>
-            <h3>{car.title}</h3>
-            <p>{car.blurb}</p>
-          </article>
-        ))}
-      </div>
+      {loading && <p>Loading cars from API…</p>}
+
+      {error && (
+        <p role="alert" style={{ color: '#b91c1c' }}>
+          {error}
+        </p>
+      )}
+
+      {!loading && !error && (
+        <div className="card-grid">
+          {cars.map((car) => (
+            <article className="card" key={car.id}>
+              <span className="badge">{car.year}</span>
+              <h3>{car.make} {car.model}</h3>
+              <p>Mileage: {car.mileage.toLocaleString()} mi</p>
+              <Link to={`/cars/${car.id}`}>View details</Link>
+            </article>
+          ))}
+          {cars.length === 0 && <p>No cars returned by the API.</p>}
+        </div>
+      )}
     </section>
   );
 }
