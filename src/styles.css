@@ -46,24 +46,55 @@ body {
   text-decoration: none;
 }
 
-nav {
+.topbar-nav {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-group {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.45rem;
 }
 
-nav a {
+.nav-group a {
   color: var(--muted);
   text-decoration: none;
   font-size: 0.9rem;
-  padding: 0.3rem 0.6rem;
+  padding: 0.4rem 0.7rem;
   border-radius: 999px;
+  border: 1px solid transparent;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-nav a.active,
-nav a:hover {
+.nav-group a.active,
+.nav-group a:hover {
   color: var(--text);
   background: rgba(82, 182, 255, 0.2);
+  border-color: rgba(82, 182, 255, 0.35);
+}
+
+.nav-group-auth {
+  margin-left: auto;
+  background: rgba(10, 17, 32, 0.7);
+  border: 1px solid rgba(122, 247, 200, 0.25);
+  border-radius: 999px;
+  padding: 0.2rem;
+}
+
+.nav-group-auth a {
+  color: var(--accent-2);
+}
+
+.nav-group-auth a.active,
+.nav-group-auth a:hover {
+  color: #06121a;
+  background: linear-gradient(90deg, rgba(122, 247, 200, 0.9), rgba(82, 182, 255, 0.85));
+  border-color: transparent;
 }
 
 .container {
