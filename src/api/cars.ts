@@ -32,10 +32,17 @@ export type CarUpdatePayload = Partial<CarCreatePayload>;
 export type ListCarsParams = {
   page?: number;
   pageSize?: number;
+  sort?: string;
   make?: string;
   model?: string;
   year?: number;
-  search?: string;
+  gearbox?: string;
+  drivetrain?: string;
+  fuel?: string;
+  horsepower_min?: number;
+  horsepower_max?: number;
+  price_min?: number;
+  price_max?: number;
 };
 
 export type ListCarsResponse = {
