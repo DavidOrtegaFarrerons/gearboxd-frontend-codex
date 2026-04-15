@@ -21,6 +21,7 @@ export default function App() {
 
         <Route path="auth/register" element={<RegisterPage />} />
         <Route path="auth/activate" element={<ActivatePage />} />
+        <Route path="verifyAccount" element={<ActivatePage />} />
         <Route path="auth/login" element={<LoginPage />} />
 
         <Route element={<ProtectedRoute />}>
