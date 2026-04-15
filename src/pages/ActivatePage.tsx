@@ -1,51 +1,40 @@
-import { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { IconCheck, IconX } from '../components/Icons';
 import { activate } from '../api/users';
 
+type VerificationState = 'loading' | 'success' | 'error';
+
 export default function ActivatePage() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = useMemo(() => searchParams.get('token')?.trim() ?? '', [searchParams]);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [state, setState] = useState<VerificationState>('loading');
 
-  const handleVerify = async () => {
-    if (!token) {
-      setError('Verification token is missing from the link. Please use the latest email link.');
-      return;
-    }
+  useEffect(() => {
+    const run = async () => {
+      if (!token) {
+        setState('error');
+        return;
+      }
 
-    setIsSubmitting(true);
-    setToastMessage(null);
-    setError(null);
+      try {
+        await activate({ token });
+        setState('success');
+      } catch {
+        setState('error');
+      }
+    };
 
-    try {
-      await activate({ token });
-      setToastMessage('Account verified successfully. Redirecting to inventory...');
-      window.setTimeout(() => {
-        navigate('/');
-      }, 1200);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Verification failed.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    void run();
+  }, [token]);
 
   return (
-    <section className="card form-card">
-      <h2>Verify Account</h2>
-      <button type="button" onClick={handleVerify} disabled={isSubmitting || !token}>
-        {isSubmitting ? 'Verifying...' : 'Verify now'}
-      </button>
-      {!token && <p role="alert" style={{ color: '#b91c1c' }}>No token found in the URL.</p>}
-      {error && <p role="alert" style={{ color: '#b91c1c' }}>{error}</p>}
-      {toastMessage && (
-        <div className="toast toast-success" role="status" aria-live="polite">
-          {toastMessage}
-        </div>
-      )}
+    <section className="content-wrap section-space auth-wrap">
+      <div className="panel verify-card">
+        {state === 'loading' && <><div className="spinner" /><p className="muted">Verifying your account…</p></>}
+        {state === 'success' && <><IconCheck className="success-icon" size={64} /><h1 className="centered">You&apos;re in!</h1><p className="left-copy">Your account has been activated. Start exploring the catalogue and logging your first car.</p><Link to="/cars" className="button primary">Browse Cars</Link></>}
+        {state === 'error' && <><IconX className="error-icon" size={64} /><h1 className="centered">Verification failed</h1><p className="left-copy">This link is invalid or has expired. Please request a new activation email.</p><Link to="/auth/register" className="button primary">Resend Activation Email</Link></>}
+      </div>
     </section>
   );
 }

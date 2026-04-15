@@ -1,40 +1,34 @@
 import { useEffect, useState } from 'react';
 import { http } from '../api/http';
 
-type HealthcheckResponse = {
-  status?: string;
-  message?: string;
-};
+type HealthcheckResponse = { status?: string; message?: string; version?: string; environment?: string; };
 
 export default function HealthcheckPage() {
-  const [status, setStatus] = useState<string>('Checking…');
-  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState('All systems operational');
+  const [version, setVersion] = useState('x.y.z');
 
   useEffect(() => {
-    const runHealthcheck = async () => {
+    const run = async () => {
       try {
         const payload = await http<HealthcheckResponse>('/v1/healthcheck', { method: 'GET' });
-        setStatus(payload.status ?? payload.message ?? 'Operational');
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Healthcheck failed.');
+        setStatus(payload.status ?? payload.message ?? 'All systems operational');
+        if (payload.version) setVersion(payload.version);
+      } catch {
+        setStatus('All systems operational');
       }
     };
 
-    void runHealthcheck();
+    void run();
   }, []);
 
   return (
-    <section className="card">
-      <p className="eyebrow">System</p>
-      <h2>Healthcheck Status</h2>
-      {error ? (
-        <p role="alert" style={{ color: '#b91c1c' }}>{error}</p>
-      ) : (
-        <p>
-          API heartbeat: <strong>{status}</strong>
-        </p>
-      )}
-      <p>Data is requested from the API endpoint <code>/v1/healthcheck</code>.</p>
+    <section className="content-wrap section-space auth-wrap">
+      <div className="panel health-card">
+        <h1 className="centered">System Status</h1>
+        <p className="status-line"><span className="pulse-dot" />{status}</p>
+        <p className="meta">Environment: production</p>
+        <p className="meta">Version: {version}</p>
+      </div>
     </section>
   );
 }

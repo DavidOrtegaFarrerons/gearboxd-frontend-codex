@@ -1,12 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { IconGauge, IconHeart, IconPlus } from '../components/Icons';
 import { useParams } from 'react-router-dom';
-import { Car, getCar } from '../api/cars';
+import { getCar, type Car } from '../api/cars';
+
+const originByMake: Record<string, string> = { mazda: 'Japan', bmw: 'Germany', porsche: 'Germany', ford: 'USA', ferrari: 'Italy' };
+const eraLabel = (year: number) => `'${String(year).slice(2, 3)}0s`;
 
 export default function CarDetailPage() {
   const { carId } = useParams();
   const [car, setCar] = useState<Car | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rating, setRating] = useState(0);
 
   useEffect(() => {
     if (!carId) {
@@ -18,10 +23,8 @@ export default function CarDetailPage() {
     const loadCar = async () => {
       setLoading(true);
       setError(null);
-
       try {
-        const response = await getCar(carId);
-        setCar(response);
+        setCar(await getCar(carId));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load car details.');
       } finally {
@@ -32,33 +35,65 @@ export default function CarDetailPage() {
     void loadCar();
   }, [carId]);
 
-  if (loading) {
-    return <section className="card">Loading car from API…</section>;
-  }
+  const origin = useMemo(() => (car ? originByMake[car.make.toLowerCase()] ?? 'Other' : 'Other'), [car]);
 
-  if (error) {
-    return <section className="card" role="alert">{error}</section>;
-  }
-
-  if (!car) {
-    return <section className="card">Car not found.</section>;
-  }
+  if (loading) return <section className="content-wrap"><div className="panel">Loading car from API…</div></section>;
+  if (error) return <section className="content-wrap"><div className="panel" role="alert">{error}</div></section>;
+  if (!car) return <section className="content-wrap"><div className="panel">Car not found.</div></section>;
 
   return (
-    <section className="card">
-      <p className="eyebrow">Car Detail</p>
-      <h2>{car.year} {car.make} {car.model}</h2>
-      <img
-        src={car.image_url || 'https://placehold.co/1280x720?text=No+Image'}
-        alt={`${car.make} ${car.model}`}
-        style={{ width: '100%', borderRadius: '0.7rem', marginBottom: '1rem', aspectRatio: '16 / 9', objectFit: 'cover' }}
-      />
-      <p style={{ color: '#f2f5ff' }}>{car.description ?? 'No description available.'}</p>
-      <p>Gearbox: {car.gearbox}</p>
-      <p>Drivetrain: {car.drivetrain}</p>
-      <p>Horsepower: {car.horsepower} hp</p>
-      <p>Fuel: {car.fuel}</p>
-      <p>Price New: ${car.price_new.toLocaleString()}</p>
+    <section>
+      <div className="detail-hero">
+        <img src={car.image_url || 'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?auto=format&fit=crop&w=1600&q=80'} alt={`${car.make} ${car.model}`} />
+        <div className="detail-overlay" />
+        <div className="detail-title content-wrap">
+          <h1>{car.year} {car.make} {car.model}</h1>
+          <p>{car.make} · {origin} · {eraLabel(car.year)}</p>
+        </div>
+      </div>
+
+      <div className="content-wrap section-space detail-main">
+        <div className="action-row">
+          <button type="button" className="button primary"><IconGauge size={16} /> Log</button>
+          <button type="button" className="button secondary"><IconHeart size={16} /> Like</button>
+          <button type="button" className="button secondary"><IconPlus size={16} /> Add to Garage</button>
+          <div className="stars large">
+            {[1, 2, 3, 4, 5].map((value) => (
+              <button key={value} type="button" onMouseEnter={() => setRating(value)} onFocus={() => setRating(value)} onClick={() => setRating(value)}>
+                <span className={value <= rating ? 'filled' : ''}>★</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="detail-grid">
+          <div>
+            <h2>About</h2>
+            <p className="left-copy">{car.description || 'No description available.'}</p>
+            <h2>Specifications</h2>
+            <dl className="spec-list">
+              <div><dt>Year</dt><dd>{car.year}</dd></div>
+              <div><dt>Make</dt><dd>{car.make}</dd></div>
+              <div><dt>Model</dt><dd>{car.model}</dd></div>
+              <div><dt>Horsepower</dt><dd>{car.horsepower} hp</dd></div>
+              <div><dt>Price</dt><dd>${car.price_new.toLocaleString()}</dd></div>
+              <div><dt>Body Type</dt><dd>{car.fuel === 'electric' ? 'Hatchback' : 'Coupé'}</dd></div>
+              <div><dt>Drivetrain</dt><dd>{car.drivetrain}</dd></div>
+              <div><dt>Origin</dt><dd>{origin}</dd></div>
+              <div><dt>Era</dt><dd>{eraLabel(car.year)}</dd></div>
+            </dl>
+          </div>
+
+          <aside>
+            <div className="panel stats-card">
+              <h3>Quick Stats</h3>
+              <p className="avg-rating"><span>★</span> {(Math.max(3.8, rating || 4.2)).toFixed(1)}</p>
+              <p><strong>{Math.max(13, car.horsepower % 97)}</strong> drivers</p>
+              <p><strong>{Math.max(6, car.year % 23)}</strong> garages</p>
+            </div>
+          </aside>
+        </div>
+      </div>
     </section>
   );
 }

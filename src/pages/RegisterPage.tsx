@@ -1,5 +1,7 @@
 import { FormEvent, useState } from 'react';
+import { Navigate, Link } from 'react-router-dom';
 import { register } from '../api/users';
+import { getSessionToken } from '../state/sessionToken';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -8,11 +10,12 @@ export default function RegisterPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  if (getSessionToken()) return <Navigate to="/" replace />;
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setMessage(null);
     setError(null);
-
     try {
       await register({ email, username, password });
       setMessage('Registration submitted. Check your email for activation instructions.');
@@ -22,17 +25,21 @@ export default function RegisterPage() {
   };
 
   return (
-    <section className="card form-card">
-      <h2>Register</h2>
-      <p>Create your Gearboxd account to list and manage vehicles.</p>
-      <form onSubmit={handleSubmit}>
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button type="submit">Create account</button>
-      </form>
-      {message && <p>{message}</p>}
-      {error && <p role="alert" style={{ color: '#b91c1c' }}>{error}</p>}
+    <section className="content-wrap section-space auth-wrap">
+      <div className="panel auth-card">
+        <div className="auth-logo">Gearboxd</div>
+        <h1 className="centered">Create your account</h1>
+        <p className="centered muted">Track every car. Build your dream garage.</p>
+        <form onSubmit={handleSubmit} className="narrow-form">
+          <label>Username<input type="text" required value={username} onChange={(e) => setUsername(e.target.value)} /></label>
+          <label>Email<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+          <label>Password<input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+          <button className="button primary full" type="submit">Create Account</button>
+          {message && <p className="success-text">{message}</p>}
+          {error && <p className="error-text">{error}</p>}
+        </form>
+        <p className="centered small">Already have an account? <Link to="/auth/login">Sign In</Link></p>
+      </div>
     </section>
   );
 }

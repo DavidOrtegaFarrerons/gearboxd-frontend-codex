@@ -1,94 +1,38 @@
-import { FormEvent, useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Car, ListCarsParams, listCars } from '../api/cars';
+import { useEffect, useMemo, useState } from 'react';
+import { IconChevronLeft, IconChevronRight, IconSearch } from '../components/Icons';
+import CarCard from '../components/CarCard';
+import { listCars, type Car } from '../api/cars';
 
-type FilterState = {
-  make: string;
-  model: string;
-  year: string;
-  gearbox: string;
-  drivetrain: string;
-  fuel: string;
-  horsepower_min: string;
-  horsepower_max: string;
-  price_min: string;
-  price_max: string;
-  sort: string;
+const originByMake: Record<string, string> = {
+  mazda: 'Japan', toyota: 'Japan', honda: 'Japan', nissan: 'Japan', subaru: 'Japan',
+  bmw: 'Germany', mercedes: 'Germany', porsche: 'Germany', audi: 'Germany', volkswagen: 'Germany',
+  ferrari: 'Italy', lamborghini: 'Italy', alfa: 'Italy', fiat: 'Italy',
+  jaguar: 'UK', mini: 'UK', aston: 'UK',
+  ford: 'USA', chevrolet: 'USA', dodge: 'USA', tesla: 'USA',
+  renault: 'France', peugeot: 'France',
+  volvo: 'Sweden', saab: 'Sweden',
 };
 
-const DEFAULT_FILTERS: FilterState = {
-  make: '',
-  model: '',
-  year: '',
-  gearbox: '',
-  drivetrain: '',
-  fuel: '',
-  horsepower_min: '',
-  horsepower_max: '',
-  price_min: '',
-  price_max: '',
-  sort: 'make',
-};
-
-function parseNumber(value: string): number | undefined {
-  if (!value.trim()) {
-    return undefined;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function filtersToParams(filters: FilterState): ListCarsParams {
-  return {
-    page: 1,
-    pageSize: 24,
-    sort: filters.sort,
-    make: filters.make.trim() || undefined,
-    model: filters.model.trim() || undefined,
-    year: parseNumber(filters.year),
-    gearbox: filters.gearbox.trim() || undefined,
-    drivetrain: filters.drivetrain.trim() || undefined,
-    fuel: filters.fuel.trim() || undefined,
-    horsepower_min: parseNumber(filters.horsepower_min),
-    horsepower_max: parseNumber(filters.horsepower_max),
-    price_min: parseNumber(filters.price_min),
-    price_max: parseNumber(filters.price_max),
-  };
-}
-
-function paramsFromSearch(searchParams: URLSearchParams): FilterState {
-  return {
-    make: searchParams.get('make') ?? '',
-    model: searchParams.get('model') ?? '',
-    year: searchParams.get('year') ?? '',
-    gearbox: searchParams.get('gearbox') ?? '',
-    drivetrain: searchParams.get('drivetrain') ?? '',
-    fuel: searchParams.get('fuel') ?? '',
-    horsepower_min: searchParams.get('horsepower_min') ?? '',
-    horsepower_max: searchParams.get('horsepower_max') ?? '',
-    price_min: searchParams.get('price_min') ?? '',
-    price_max: searchParams.get('price_max') ?? '',
-    sort: searchParams.get('sort') ?? 'make',
-  };
-}
+const eraLabel = (year: number) => `'${String(year).slice(2, 3)}0s`;
 
 export default function CarListPage() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [filters, setFilters] = useState<FilterState>(() => paramsFromSearch(searchParams));
+  const [search, setSearch] = useState('');
+  const [era, setEra] = useState('All');
+  const [origin, setOrigin] = useState('All');
+  const [sortBy, setSortBy] = useState('Name A–Z');
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
   useEffect(() => {
-    setFilters(paramsFromSearch(searchParams));
-
     const loadCars = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const response = await listCars(filtersToParams(paramsFromSearch(searchParams)));
+        const response = await listCars({ page, pageSize, sort: 'make' });
         setCars(response.items);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load cars.');
@@ -98,145 +42,81 @@ export default function CarListPage() {
     };
 
     void loadCars();
-  }, [searchParams]);
+  }, [page]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const nextParams = new URLSearchParams();
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value.trim()) {
-        nextParams.set(key, value.trim());
-      }
+  const processedCars = useMemo(() => {
+    let next = [...cars].filter((car) => {
+      const q = search.trim().toLowerCase();
+      const searchMatch = !q || `${car.make} ${car.model} ${car.year}`.toLowerCase().includes(q);
+      const carEra = eraLabel(car.year);
+      const mappedOrigin = originByMake[car.make.toLowerCase()] ?? 'Other';
+      return searchMatch && (era === 'All' || carEra === era) && (origin === 'All' || mappedOrigin === origin);
     });
 
-    setSearchParams(nextParams);
-  };
+    switch (sortBy) {
+      case 'Year ↑': next.sort((a, b) => a.year - b.year); break;
+      case 'Year ↓': next.sort((a, b) => b.year - a.year); break;
+      case 'Horsepower ↑': next.sort((a, b) => a.horsepower - b.horsepower); break;
+      case 'Horsepower ↓': next.sort((a, b) => b.horsepower - a.horsepower); break;
+      case 'Price ↑': next.sort((a, b) => a.price_new - b.price_new); break;
+      case 'Price ↓': next.sort((a, b) => b.price_new - a.price_new); break;
+      default: next.sort((a, b) => `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`));
+    }
 
-  const handleReset = () => {
-    setFilters(DEFAULT_FILTERS);
-    setSearchParams(new URLSearchParams());
-  };
+    return next;
+  }, [cars, era, origin, search, sortBy]);
+
+  const hasActiveFilters = Boolean(search.trim()) || era !== 'All' || origin !== 'All' || sortBy !== 'Name A–Z';
 
   return (
-    <section>
-      <div className="hero">
-        <p className="eyebrow">Public Inventory</p>
-        <h1>Find Your Next Driver&apos;s Car</h1>
-        <p>Inventory is loaded live from the Gearboxd API.</p>
+    <section className="content-wrap section-space">
+      <h1 className="page-title">Cars</h1>
+
+      <label className="search-wrap" htmlFor="catalog-search">
+        <IconSearch size={18} />
+        <input
+          id="catalog-search"
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search cars by make, model, or keyword…"
+          className="search-input"
+        />
+      </label>
+
+      <div className="filter-row">
+        <select value={era} onChange={(e) => setEra(e.target.value)}>
+          <option>All</option><option>'60s</option><option>'70s</option><option>'80s</option><option>'90s</option><option>'00s</option><option>'10s</option><option>'20s</option>
+        </select>
+        <select value={origin} onChange={(e) => setOrigin(e.target.value)}>
+          <option>All</option><option>Japan</option><option>Germany</option><option>Italy</option><option>UK</option><option>USA</option><option>France</option><option>Sweden</option>
+        </select>
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <option>Name A–Z</option><option>Year ↑</option><option>Year ↓</option><option>Horsepower ↑</option><option>Horsepower ↓</option><option>Price ↑</option><option>Price ↓</option>
+        </select>
+        {hasActiveFilters && <button type="button" className="text-link-button" onClick={() => { setSearch(''); setEra('All'); setOrigin('All'); setSortBy('Name A–Z'); }}>Clear filters</button>}
       </div>
 
-      <div className="inventory-layout">
-        <aside className="card filters-panel">
-          <h2>Filters</h2>
-          <form onSubmit={handleSubmit} className="filters-form">
-            <input
-              placeholder="Make"
-              value={filters.make}
-              onChange={(event) => setFilters((prev) => ({ ...prev, make: event.target.value }))}
-            />
-            <input
-              placeholder="Model"
-              value={filters.model}
-              onChange={(event) => setFilters((prev) => ({ ...prev, model: event.target.value }))}
-            />
-            <input
-              type="number"
-              placeholder="Year"
-              value={filters.year}
-              onChange={(event) => setFilters((prev) => ({ ...prev, year: event.target.value }))}
-            />
-            <input
-              placeholder="Gearbox"
-              value={filters.gearbox}
-              onChange={(event) => setFilters((prev) => ({ ...prev, gearbox: event.target.value }))}
-            />
-            <input
-              placeholder="Drivetrain"
-              value={filters.drivetrain}
-              onChange={(event) => setFilters((prev) => ({ ...prev, drivetrain: event.target.value }))}
-            />
-            <input
-              placeholder="Fuel"
-              value={filters.fuel}
-              onChange={(event) => setFilters((prev) => ({ ...prev, fuel: event.target.value }))}
-            />
-            <input
-              type="number"
-              placeholder="Horsepower min"
-              value={filters.horsepower_min}
-              onChange={(event) => setFilters((prev) => ({ ...prev, horsepower_min: event.target.value }))}
-            />
-            <input
-              type="number"
-              placeholder="Horsepower max"
-              value={filters.horsepower_max}
-              onChange={(event) => setFilters((prev) => ({ ...prev, horsepower_max: event.target.value }))}
-            />
-            <input
-              type="number"
-              step="0.01"
-              placeholder="Price min"
-              value={filters.price_min}
-              onChange={(event) => setFilters((prev) => ({ ...prev, price_min: event.target.value }))}
-            />
-            <input
-              type="number"
-              step="0.01"
-              placeholder="Price max"
-              value={filters.price_max}
-              onChange={(event) => setFilters((prev) => ({ ...prev, price_max: event.target.value }))}
-            />
-            <select
-              value={filters.sort}
-              onChange={(event) => setFilters((prev) => ({ ...prev, sort: event.target.value }))}
-            >
-              <option value="make">Make (A-Z)</option>
-              <option value="-make">Make (Z-A)</option>
-              <option value="year">Year (old-new)</option>
-              <option value="-year">Year (new-old)</option>
-              <option value="horsepower">Horsepower (low-high)</option>
-              <option value="-horsepower">Horsepower (high-low)</option>
-              <option value="price">Price (low-high)</option>
-              <option value="-price">Price (high-low)</option>
-            </select>
+      {loading && <p className="muted">Loading cars from API…</p>}
+      {error && <p role="alert" className="error-text">{error}</p>}
 
-            <button type="submit">Apply filters</button>
-            <button type="button" className="button-secondary" onClick={handleReset}>Reset</button>
-          </form>
-        </aside>
+      {!loading && !error && (
+        <>
+          <div className="cars-grid">
+            {processedCars.map((car) => <CarCard car={car} key={car.id} />)}
+          </div>
 
-        <div>
-          {loading && <p>Loading cars from API…</p>}
-
-          {error && (
-            <p role="alert" style={{ color: '#b91c1c' }}>
-              {error}
-            </p>
-          )}
-
-          {!loading && !error && (
-            <div className="card-grid">
-              {cars.map((car) => (
-                <article className="card" key={car.id}>
-                  <img
-                    src={car.image_url || 'https://placehold.co/640x360?text=No+Image'}
-                    alt={`${car.make} ${car.model}`}
-                    style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: '0.6rem', marginBottom: '0.7rem' }}
-                  />
-                  <span className="badge">{car.year}</span>
-                  <h3>{car.make} {car.model}</h3>
-                  <p style={{ color: '#dbeafe' }}>{car.gearbox} · {car.drivetrain} · {car.horsepower} hp</p>
-                  <p style={{ color: '#7af7c8' }}>${car.price_new.toLocaleString()}</p>
-                  <Link to={`/cars/${car.id}`}>View details</Link>
-                </article>
-              ))}
-              {cars.length === 0 && <p>No cars returned by the API.</p>}
-            </div>
-          )}
-        </div>
-      </div>
+          <div className="pagination-row">
+            <button type="button" className="button secondary" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+              <IconChevronLeft size={16} /> Previous
+            </button>
+            <span>Page {page} of {Math.max(page, page + Number(processedCars.length === pageSize))}</span>
+            <button type="button" className="button secondary" onClick={() => setPage((p) => p + 1)} disabled={cars.length < pageSize}>
+              Next <IconChevronRight size={16} />
+            </button>
+          </div>
+        </>
+      )}
     </section>
   );
 }

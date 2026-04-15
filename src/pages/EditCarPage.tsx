@@ -1,25 +1,33 @@
 import { FormEvent, useState } from 'react';
-import { updateCar } from '../api/cars';
+import { getCar, updateCar } from '../api/cars';
 import { getSessionToken } from '../state/sessionToken';
-
-const gearboxOptions = ['manual', 'automatic', 'DCT', 'CVT'] as const;
-const drivetrainOptions = ['FWD', 'RWD', 'AWD', '4WD'] as const;
-const fuelOptions = ['diesel', 'gas', 'electric', 'hybrid', 'plug-in-hybrid', 'hydrogen', 'lpg', 'cng'] as const;
 
 export default function EditCarPage() {
   const [carId, setCarId] = useState('');
-  const [make, setMake] = useState('');
-  const [model, setModel] = useState('');
-  const [year, setYear] = useState('');
-  const [description, setDescription] = useState('');
-  const [imageURL, setImageURL] = useState('');
-  const [gearbox, setGearbox] = useState('');
-  const [drivetrain, setDrivetrain] = useState('');
-  const [horsepower, setHorsepower] = useState('');
-  const [fuel, setFuel] = useState('');
-  const [priceNew, setPriceNew] = useState('');
+  const [fields, setFields] = useState({ make: '', model: '', year: '', description: '', imageURL: '', gearbox: '', drivetrain: '', horsepower: '', fuel: '', price: '' });
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const fillFromCar = async () => {
+    if (!carId) return;
+    try {
+      const car = await getCar(carId);
+      setFields({
+        make: car.make,
+        model: car.model,
+        year: String(car.year),
+        description: car.description || '',
+        imageURL: car.image_url || '',
+        gearbox: car.gearbox,
+        drivetrain: car.drivetrain,
+        horsepower: String(car.horsepower),
+        fuel: car.fuel,
+        price: String(car.price_new),
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to load car.');
+    }
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -27,31 +35,21 @@ export default function EditCarPage() {
     setError(null);
 
     const token = getSessionToken();
-    if (!token) {
-      setError('Missing token. Log in first.');
-      return;
-    }
-
-    const payload = {
-      ...(make ? { make } : {}),
-      ...(model ? { model } : {}),
-      ...(year ? { year: Number(year) } : {}),
-      ...(description ? { description } : {}),
-      ...(imageURL ? { image_url: imageURL } : {}),
-      ...(gearbox ? { gearbox } : {}),
-      ...(drivetrain ? { drivetrain } : {}),
-      ...(horsepower ? { horsepower: Number(horsepower) } : {}),
-      ...(fuel ? { fuel } : {}),
-      ...(priceNew ? { price_new: Number(priceNew) } : {}),
-    };
-
-    if (Object.keys(payload).length === 0) {
-      setError('Provide at least one field to update.');
-      return;
-    }
+    if (!token) return setError('Missing token. Log in first.');
 
     try {
-      const updated = await updateCar(carId, payload, token);
+      const updated = await updateCar(carId, {
+        make: fields.make,
+        model: fields.model,
+        year: Number(fields.year),
+        description: fields.description,
+        image_url: fields.imageURL,
+        gearbox: fields.gearbox,
+        drivetrain: fields.drivetrain,
+        horsepower: Number(fields.horsepower),
+        fuel: fields.fuel,
+        price_new: Number(fields.price),
+      }, token);
       setMessage(`Updated car ${updated.id}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update car.');
@@ -59,45 +57,21 @@ export default function EditCarPage() {
   };
 
   return (
-    <section className="card form-card">
-      <h2>Edit Car</h2>
-      <p>All PUT fields are optional. Fill only what you want to update.</p>
-      <form onSubmit={handleSubmit}>
-        <input type="text" placeholder="Car ID" value={carId} onChange={(e) => setCarId(e.target.value)} required />
-        <input type="text" placeholder="Make (optional)" value={make} onChange={(e) => setMake(e.target.value)} />
-        <input type="text" placeholder="Model (optional)" value={model} onChange={(e) => setModel(e.target.value)} />
-        <input type="number" placeholder="Year (optional)" value={year} onChange={(e) => setYear(e.target.value)} />
-        <textarea placeholder="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
-        <input type="url" placeholder="Image URL (optional)" value={imageURL} onChange={(e) => setImageURL(e.target.value)} />
-
-        <select value={gearbox} onChange={(e) => setGearbox(e.target.value)}>
-          <option value="">Gearbox (optional)</option>
-          {gearboxOptions.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-
-        <select value={drivetrain} onChange={(e) => setDrivetrain(e.target.value)}>
-          <option value="">Drivetrain (optional)</option>
-          {drivetrainOptions.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-
-        <input type="number" placeholder="Horsepower (optional)" value={horsepower} onChange={(e) => setHorsepower(e.target.value)} />
-
-        <select value={fuel} onChange={(e) => setFuel(e.target.value)}>
-          <option value="">Fuel (optional)</option>
-          {fuelOptions.map((option) => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-
-        <input type="number" step="0.01" placeholder="Price new (optional)" value={priceNew} onChange={(e) => setPriceNew(e.target.value)} />
-        <button type="submit">Save changes</button>
+    <section className="form-page content-wrap section-space">
+      <h1 className="page-title centered">Edit Car</h1>
+      <form onSubmit={handleSubmit} className="panel narrow-form">
+        <label>Car ID<input required value={carId} onChange={(e) => setCarId(e.target.value)} /></label>
+        <button type="button" className="button secondary" onClick={fillFromCar}>Load existing values</button>
+        <label>Make<input value={fields.make} onChange={(e) => setFields((p) => ({ ...p, make: e.target.value }))} /></label>
+        <label>Model<input value={fields.model} onChange={(e) => setFields((p) => ({ ...p, model: e.target.value }))} /></label>
+        <label>Year<input type="number" value={fields.year} onChange={(e) => setFields((p) => ({ ...p, year: e.target.value }))} /></label>
+        <label>Description<textarea rows={4} value={fields.description} onChange={(e) => setFields((p) => ({ ...p, description: e.target.value }))} /></label>
+        <label>Image URL<input value={fields.imageURL} onChange={(e) => setFields((p) => ({ ...p, imageURL: e.target.value }))} /></label>
+        <button type="submit" className="button primary full">Save Changes</button>
+        <a href="/cars/delete" className="button destructive" style={{ textAlign: 'center' }}>Delete this car</a>
+        {message && <p className="success-text">{message}</p>}
+        {error && <p className="error-text">{error}</p>}
       </form>
-      {message && <p>{message}</p>}
-      {error && <p role="alert" style={{ color: '#b91c1c' }}>{error}</p>}
     </section>
   );
 }

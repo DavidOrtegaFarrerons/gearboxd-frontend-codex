@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
+import { Navigate, Link } from 'react-router-dom';
 import { getAuthenticationToken } from '../api/auth';
-import { setSessionToken } from '../state/sessionToken';
+import { getSessionToken, setSessionToken } from '../state/sessionToken';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -8,31 +9,36 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  if (getSessionToken()) return <Navigate to="/" replace />;
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setMessage(null);
     setError(null);
-
     try {
       const response = await getAuthenticationToken({ email, password });
       setSessionToken(response.token);
-      setMessage('Token received and saved for future authenticated requests.');
+      setMessage('Signed in successfully.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.');
     }
   };
 
   return (
-    <section className="card form-card">
-      <h2>Login / Token</h2>
-      <p>Authenticate to create, edit, and remove cars from your garage.</p>
-      <form onSubmit={handleSubmit}>
-        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <button type="submit">Get token</button>
-      </form>
-      {message && <p>{message}</p>}
-      {error && <p role="alert" style={{ color: '#b91c1c' }}>{error}</p>}
+    <section className="content-wrap section-space auth-wrap">
+      <div className="panel auth-card">
+        <div className="auth-logo">Gearboxd</div>
+        <h1 className="centered">Welcome back</h1>
+        <p className="centered muted">Sign in to your Gearboxd account</p>
+        <form onSubmit={handleSubmit} className="narrow-form">
+          <label>Email<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+          <label>Password<input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+          <button className="button primary full" type="submit">Sign In</button>
+          {message && <p className="success-text">{message}</p>}
+          {error && <p className="error-text">{error}</p>}
+        </form>
+        <p className="centered small">Don&apos;t have an account? <Link to="/auth/register">Create one</Link></p>
+      </div>
     </section>
   );
 }
