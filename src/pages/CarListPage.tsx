@@ -45,9 +45,14 @@ export default function CarListPage() {
         <div className="card-grid">
           {cars.map((car) => (
             <article className="card" key={car.id}>
+              <img
+                src={car.image_url || 'https://placehold.co/640x360?text=No+Image'}
+                alt={`${car.make} ${car.model}`}
+                style={{ width: '100%', aspectRatio: '16 / 9', objectFit: 'cover', borderRadius: '0.6rem', marginBottom: '0.7rem' }}
+              />
               <span className="badge">{car.year}</span>
               <h3>{car.make} {car.model}</h3>
-              <p>{car.gearbox} · {car.drivetrain} · {car.horsepower} hp</p>
+              <p style={{ color: '#dbeafe' }}>{car.gearbox} · {car.drivetrain} · {car.horsepower} hp</p>
               <Link to={`/cars/${car.id}`}>View details</Link>
             </article>
           ))}
