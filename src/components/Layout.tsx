@@ -11,7 +11,6 @@ const primaryNavItems = [
 
 const authNavItems = [
   { to: '/auth/register', label: 'Register' },
-  { to: '/auth/activate', label: 'Activate' },
   { to: '/auth/login', label: 'Login' }
 ];
 
