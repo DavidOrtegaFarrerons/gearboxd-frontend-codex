@@ -83,7 +83,7 @@ If frontend and API are hosted on different origins, backend CORS must explicitl
 ### Auth
 
 - `/auth/register`
-- `/auth/activate`
+- `/verifyAccount`
 - `/auth/login`
 
 ### Protected (requires `gearboxd-token` in localStorage)
