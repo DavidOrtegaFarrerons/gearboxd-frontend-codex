@@ -48,7 +48,12 @@ export default function CarDetailPage() {
     <section className="card">
       <p className="eyebrow">Car Detail</p>
       <h2>{car.year} {car.make} {car.model}</h2>
-      <p>{car.description ?? 'No description available.'}</p>
+      <img
+        src={car.image_url || 'https://placehold.co/1280x720?text=No+Image'}
+        alt={`${car.make} ${car.model}`}
+        style={{ width: '100%', borderRadius: '0.7rem', marginBottom: '1rem', aspectRatio: '16 / 9', objectFit: 'cover' }}
+      />
+      <p style={{ color: '#f2f5ff' }}>{car.description ?? 'No description available.'}</p>
       <p>Gearbox: {car.gearbox}</p>
       <p>Drivetrain: {car.drivetrain}</p>
       <p>Horsepower: {car.horsepower} hp</p>

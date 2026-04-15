@@ -2,6 +2,10 @@ import { FormEvent, useState } from 'react';
 import { updateCar } from '../api/cars';
 import { getSessionToken } from '../state/sessionToken';
 
+const gearboxOptions = ['manual', 'automatic', 'DCT', 'CVT'] as const;
+const drivetrainOptions = ['FWD', 'RWD', 'AWD', '4WD'] as const;
+const fuelOptions = ['diesel', 'gas', 'electric', 'hybrid', 'plug-in-hybrid', 'hydrogen', 'lpg', 'cng'] as const;
+
 export default function EditCarPage() {
   const [carId, setCarId] = useState('');
   const [make, setMake] = useState('');
@@ -65,10 +69,30 @@ export default function EditCarPage() {
         <input type="number" placeholder="Year (optional)" value={year} onChange={(e) => setYear(e.target.value)} />
         <textarea placeholder="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} />
         <input type="url" placeholder="Image URL (optional)" value={imageURL} onChange={(e) => setImageURL(e.target.value)} />
-        <input type="text" placeholder="Gearbox (optional)" value={gearbox} onChange={(e) => setGearbox(e.target.value)} />
-        <input type="text" placeholder="Drivetrain (optional)" value={drivetrain} onChange={(e) => setDrivetrain(e.target.value)} />
+
+        <select value={gearbox} onChange={(e) => setGearbox(e.target.value)}>
+          <option value="">Gearbox (optional)</option>
+          {gearboxOptions.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+
+        <select value={drivetrain} onChange={(e) => setDrivetrain(e.target.value)}>
+          <option value="">Drivetrain (optional)</option>
+          {drivetrainOptions.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+
         <input type="number" placeholder="Horsepower (optional)" value={horsepower} onChange={(e) => setHorsepower(e.target.value)} />
-        <input type="text" placeholder="Fuel (optional)" value={fuel} onChange={(e) => setFuel(e.target.value)} />
+
+        <select value={fuel} onChange={(e) => setFuel(e.target.value)}>
+          <option value="">Fuel (optional)</option>
+          {fuelOptions.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+
         <input type="number" step="0.01" placeholder="Price new (optional)" value={priceNew} onChange={(e) => setPriceNew(e.target.value)} />
         <button type="submit">Save changes</button>
       </form>

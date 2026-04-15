@@ -116,6 +116,8 @@ nav a:hover {
 }
 
 input,
+textarea,
+select,
 button {
   border-radius: 0.55rem;
   border: 1px solid rgba(255, 255, 255, 0.15);
