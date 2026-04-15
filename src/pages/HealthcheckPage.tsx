@@ -13,7 +13,7 @@ export default function HealthcheckPage() {
   useEffect(() => {
     const runHealthcheck = async () => {
       try {
-        const payload = await http<HealthcheckResponse>('/v1/healtcheck', { method: 'GET' });
+        const payload = await http<HealthcheckResponse>('/v1/healthcheck', { method: 'GET' });
         setStatus(payload.status ?? payload.message ?? 'Operational');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Healthcheck failed.');
@@ -34,7 +34,7 @@ export default function HealthcheckPage() {
           API heartbeat: <strong>{status}</strong>
         </p>
       )}
-      <p>Data is requested from the API endpoint <code>/v1/healtcheck</code>.</p>
+      <p>Data is requested from the API endpoint <code>/v1/healthcheck</code>.</p>
     </section>
   );
 }
