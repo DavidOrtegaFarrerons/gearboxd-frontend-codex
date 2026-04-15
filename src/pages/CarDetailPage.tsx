@@ -49,9 +49,11 @@ export default function CarDetailPage() {
       <p className="eyebrow">Car Detail</p>
       <h2>{car.year} {car.make} {car.model}</h2>
       <p>{car.description ?? 'No description available.'}</p>
-      <p>Mileage: {car.mileage.toLocaleString()} mi</p>
-      <p>Price: {car.price ? `$${car.price.toLocaleString()}` : 'N/A'}</p>
-      <p>Color: {car.color ?? 'N/A'}</p>
+      <p>Gearbox: {car.gearbox}</p>
+      <p>Drivetrain: {car.drivetrain}</p>
+      <p>Horsepower: {car.horsepower} hp</p>
+      <p>Fuel: {car.fuel}</p>
+      <p>Price New: ${car.price_new.toLocaleString()}</p>
     </section>
   );
 }

@@ -1,7 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { getAuthenticationToken } from '../api/auth';
-
-const TOKEN_STORAGE_KEY = 'gearboxd-token';
+import { setSessionToken } from '../state/sessionToken';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,8 +15,8 @@ export default function LoginPage() {
 
     try {
       const response = await getAuthenticationToken({ email, password });
-      localStorage.setItem(TOKEN_STORAGE_KEY, response.token);
-      setMessage('Token received and saved.');
+      setSessionToken(response.token);
+      setMessage('Token received and saved for future authenticated requests.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.');
     }

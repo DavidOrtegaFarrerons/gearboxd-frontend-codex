@@ -9,11 +9,26 @@ export type AuthenticationTokenResponse = {
   token: string;
 };
 
-export function getAuthenticationToken(
+type AuthenticationPayloadShape = {
+  token?: string;
+  authentication_token?: {
+    token?: string;
+  };
+};
+
+export async function getAuthenticationToken(
   payload: AuthenticationTokenPayload,
 ): Promise<AuthenticationTokenResponse> {
-  return http<AuthenticationTokenResponse>('/v1/tokens/authentication', {
+  const response = await http<AuthenticationPayloadShape>('/v1/tokens/authentication', {
     method: 'POST',
     body: payload,
   });
+
+  const token = response.token ?? response.authentication_token?.token;
+
+  if (!token) {
+    throw new Error('Authentication succeeded but no token was returned by the API.');
+  }
+
+  return { token };
 }
