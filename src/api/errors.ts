@@ -1,34 +1,39 @@
 export type FieldErrors = Record<string, string>;
 
+type ApiLikeError = {
+  message?: string;
+  fieldErrors?: FieldErrors;
+  status?: number;
+};
+
+function toFieldErrors(value: unknown): FieldErrors | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([key, entry]) => key !== 'code' && key !== 'message' && typeof entry === 'string');
+
+  if (!entries.length) {
+    return undefined;
+  }
+
+  return Object.fromEntries(entries) as FieldErrors;
+}
+
 export function extractFieldErrors(payload: unknown): FieldErrors | undefined {
   if (!payload || typeof payload !== 'object') {
     return undefined;
   }
 
   const record = payload as Record<string, unknown>;
-  const rawError = record.error;
+  const nestedError = record.error;
 
-  if (!rawError || typeof rawError !== 'object' || Array.isArray(rawError)) {
-    return undefined;
-  }
-
-  const source = rawError as Record<string, unknown>;
-  const entries = Object.entries(source).filter(([key, value]) => {
-    if (typeof value !== 'string') {
-      return false;
-    }
-
-    return key !== 'code' && key !== 'message';
-  });
-
-  if (!entries.length) {
-    return undefined;
-  }
-
-  return entries.reduce<FieldErrors>((accumulator, [key, value]) => {
-    accumulator[key] = value as string;
-    return accumulator;
-  }, {});
+  return toFieldErrors(record)
+    ?? toFieldErrors(nestedError)
+    ?? toFieldErrors(record.errors)
+    ?? (nestedError && typeof nestedError === 'object' ? toFieldErrors((nestedError as Record<string, unknown>).errors) : undefined)
+    ?? toFieldErrors(record.details);
 }
 
 export function getFieldError(fieldErrors: FieldErrors | undefined, ...keys: string[]): string | undefined {
@@ -41,6 +46,22 @@ export function getFieldError(fieldErrors: FieldErrors | undefined, ...keys: str
     if (value) {
       return value;
     }
+  }
+
+  return undefined;
+}
+
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'message' in error && typeof (error as ApiLikeError).message === 'string') {
+    return (error as ApiLikeError).message as string;
+  }
+
+  return fallback;
+}
+
+export function getApiFieldErrors(error: unknown): FieldErrors | undefined {
+  if (error && typeof error === 'object' && 'fieldErrors' in error) {
+    return (error as ApiLikeError).fieldErrors;
   }
 
   return undefined;
