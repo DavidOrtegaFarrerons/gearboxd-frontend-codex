@@ -1,28 +1,93 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import CarCard from '../components/CarCard';
-import { listCars, type Car } from '../api/cars';
+import { listCars, type Car, type ListCarsParams } from '../api/cars';
 
-const originByMake: Record<string, string> = {
-  mazda: 'Japan', toyota: 'Japan', honda: 'Japan', nissan: 'Japan', subaru: 'Japan',
-  bmw: 'Germany', mercedes: 'Germany', porsche: 'Germany', audi: 'Germany', volkswagen: 'Germany',
-  ferrari: 'Italy', lamborghini: 'Italy', alfa: 'Italy', fiat: 'Italy',
-  jaguar: 'UK', mini: 'UK', aston: 'UK',
-  ford: 'USA', chevrolet: 'USA', dodge: 'USA', tesla: 'USA',
-  renault: 'France', peugeot: 'France',
-  volvo: 'Sweden', saab: 'Sweden',
+type CarFilterValues = {
+  make: string;
+  model: string;
+  year: string;
+  gearbox: string;
+  drivetrain: string;
+  fuel: string;
+  horsepowerMin: string;
+  horsepowerMax: string;
+  priceMin: string;
+  priceMax: string;
+  sort: string;
 };
 
-const eraLabel = (year: number) => `'${String(year).slice(2, 3)}0s`;
+const defaultFilters: CarFilterValues = {
+  make: '',
+  model: '',
+  year: '',
+  gearbox: '',
+  drivetrain: '',
+  fuel: '',
+  horsepowerMin: '',
+  horsepowerMax: '',
+  priceMin: '',
+  priceMax: '',
+  sort: 'make',
+};
+
+const sortOptions = [
+  { value: 'make', label: 'Make (A–Z)' },
+  { value: '-make', label: 'Make (Z–A)' },
+  { value: 'year', label: 'Year (Oldest first)' },
+  { value: '-year', label: 'Year (Newest first)' },
+  { value: 'horsepower', label: 'Horsepower (Low to high)' },
+  { value: '-horsepower', label: 'Horsepower (High to low)' },
+  { value: 'price', label: 'Price (Low to high)' },
+  { value: '-price', label: 'Price (High to low)' },
+];
+
+const gearboxOptions = ['', 'Manual', 'Automatic', 'CVT', 'DCT'];
+const drivetrainOptions = ['', 'FWD', 'RWD', 'AWD', '4WD'];
+const fuelOptions = ['', 'Petrol', 'Diesel', 'Hybrid', 'Electric', 'LPG'];
+
+function toInt(value: string): number | undefined {
+  if (!value.trim()) {
+    return undefined;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function toDecimal(value: string): number | undefined {
+  if (!value.trim()) {
+    return undefined;
+  }
+
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function toParams(filters: CarFilterValues, page: number, pageSize: number): ListCarsParams {
+  return {
+    make: filters.make.trim() || undefined,
+    model: filters.model.trim() || undefined,
+    year: toInt(filters.year),
+    gearbox: filters.gearbox || undefined,
+    drivetrain: filters.drivetrain || undefined,
+    fuel: filters.fuel || undefined,
+    horsepower_min: toInt(filters.horsepowerMin),
+    horsepower_max: toInt(filters.horsepowerMax),
+    price_min: toDecimal(filters.priceMin),
+    price_max: toDecimal(filters.priceMax),
+    page,
+    pageSize,
+    sort: filters.sort,
+  };
+}
 
 export default function CarListPage() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [era, setEra] = useState('All');
-  const [origin, setOrigin] = useState('All');
-  const [sortBy, setSortBy] = useState('Name A–Z');
+  const [filters, setFilters] = useState<CarFilterValues>(defaultFilters);
+  const [appliedFilters, setAppliedFilters] = useState<CarFilterValues>(defaultFilters);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [apiPageSize, setApiPageSize] = useState(20);
@@ -34,7 +99,7 @@ export default function CarListPage() {
       setError(null);
 
       try {
-        const response = await listCars({ page, pageSize, sort: 'make' });
+        const response = await listCars(toParams(appliedFilters, page, pageSize));
         setCars(response.items);
         setTotal(response.total);
         setApiPageSize(response.pageSize || pageSize);
@@ -46,91 +111,195 @@ export default function CarListPage() {
     };
 
     void loadCars();
-  }, [page]);
+  }, [appliedFilters, page]);
 
-  const processedCars = useMemo(() => {
-    const next = [...cars].filter((car) => {
-      const q = search.trim().toLowerCase();
-      const searchMatch = !q || `${car.make} ${car.model} ${car.year}`.toLowerCase().includes(q);
-      const carEra = eraLabel(car.year);
-      const mappedOrigin = originByMake[car.make.toLowerCase()] ?? 'Other';
-      return searchMatch && (era === 'All' || carEra === era) && (origin === 'All' || mappedOrigin === origin);
-    });
+  const handleFilterSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    setPage(1);
+    setAppliedFilters(filters);
+  };
 
-    switch (sortBy) {
-      case 'Year ↑': next.sort((a, b) => a.year - b.year); break;
-      case 'Year ↓': next.sort((a, b) => b.year - a.year); break;
-      case 'Horsepower ↑': next.sort((a, b) => a.horsepower - b.horsepower); break;
-      case 'Horsepower ↓': next.sort((a, b) => b.horsepower - a.horsepower); break;
-      case 'Price ↑': next.sort((a, b) => a.price_new - b.price_new); break;
-      case 'Price ↓': next.sort((a, b) => b.price_new - a.price_new); break;
-      default: next.sort((a, b) => `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`));
-    }
+  const clearFilters = () => {
+    setFilters(defaultFilters);
+    setAppliedFilters(defaultFilters);
+    setPage(1);
+  };
 
-    return next;
-  }, [cars, era, origin, search, sortBy]);
+  const hasActiveFilters = useMemo(
+    () => Object.entries(appliedFilters).some(([key, value]) => key !== 'sort' && Boolean(value.trim())),
+    [appliedFilters],
+  );
 
-  const hasActiveFilters = Boolean(search.trim()) || era !== 'All' || origin !== 'All' || sortBy !== 'Name A–Z';
   const totalPages = Math.max(1, Math.ceil(total / Math.max(1, apiPageSize)));
 
   return (
     <section className="content-wrap section-space">
       <h1 className="page-title">Cars</h1>
 
-      <label className="search-wrap" htmlFor="catalog-search">
-        <Search size={18} />
-        <input
-          id="catalog-search"
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search cars by make, model, or keyword…"
-          className="search-input"
-        />
-      </label>
+      <div className="catalog-layout">
+        <aside className="filters-sidebar panel" aria-label="Car filters">
+          <h2>Filters</h2>
 
-      <div className="filter-row">
-        <label className="filter-pill">
-          <span>Era</span>
-          <select value={era} onChange={(e) => setEra(e.target.value)}>
-            <option>All</option><option>'60s</option><option>'70s</option><option>'80s</option><option>'90s</option><option>'00s</option><option>'10s</option><option>'20s</option>
-          </select>
-        </label>
-        <label className="filter-pill">
-          <span>Origin</span>
-          <select value={origin} onChange={(e) => setOrigin(e.target.value)}>
-            <option>All</option><option>Japan</option><option>Germany</option><option>Italy</option><option>UK</option><option>USA</option><option>France</option><option>Sweden</option>
-          </select>
-        </label>
-        <label className="filter-pill">
-          <span>Sort</span>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option>Name A–Z</option><option>Year ↑</option><option>Year ↓</option><option>Horsepower ↑</option><option>Horsepower ↓</option><option>Price ↑</option><option>Price ↓</option>
-          </select>
-        </label>
-        {hasActiveFilters && <button type="button" className="text-link-button" onClick={() => { setSearch(''); setEra('All'); setOrigin('All'); setSortBy('Name A–Z'); }}>Clear filters</button>}
+          <form onSubmit={handleFilterSubmit} className="filters-form">
+            <label>
+              Make
+              <input
+                type="text"
+                value={filters.make}
+                onChange={(event) => setFilters((previous) => ({ ...previous, make: event.target.value }))}
+                placeholder="e.g. Mazda"
+              />
+            </label>
+
+            <label>
+              Model
+              <input
+                type="text"
+                value={filters.model}
+                onChange={(event) => setFilters((previous) => ({ ...previous, model: event.target.value }))}
+                placeholder="e.g. MX-5"
+              />
+            </label>
+
+            <label>
+              Year
+              <input
+                type="number"
+                min={1900}
+                max={2100}
+                value={filters.year}
+                onChange={(event) => setFilters((previous) => ({ ...previous, year: event.target.value }))}
+                placeholder="e.g. 2020"
+              />
+            </label>
+
+            <label>
+              Gearbox
+              <select
+                value={filters.gearbox}
+                onChange={(event) => setFilters((previous) => ({ ...previous, gearbox: event.target.value }))}
+              >
+                {gearboxOptions.map((option) => (
+                  <option key={option || 'all'} value={option}>{option || 'All'}</option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Drivetrain
+              <select
+                value={filters.drivetrain}
+                onChange={(event) => setFilters((previous) => ({ ...previous, drivetrain: event.target.value }))}
+              >
+                {drivetrainOptions.map((option) => (
+                  <option key={option || 'all'} value={option}>{option || 'All'}</option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Fuel
+              <select
+                value={filters.fuel}
+                onChange={(event) => setFilters((previous) => ({ ...previous, fuel: event.target.value }))}
+              >
+                {fuelOptions.map((option) => (
+                  <option key={option || 'all'} value={option}>{option || 'All'}</option>
+                ))}
+              </select>
+            </label>
+
+            <div className="range-row">
+              <label>
+                Horsepower min
+                <input
+                  type="number"
+                  min={0}
+                  value={filters.horsepowerMin}
+                  onChange={(event) => setFilters((previous) => ({ ...previous, horsepowerMin: event.target.value }))}
+                  placeholder="0"
+                />
+              </label>
+              <label>
+                Horsepower max
+                <input
+                  type="number"
+                  min={0}
+                  value={filters.horsepowerMax}
+                  onChange={(event) => setFilters((previous) => ({ ...previous, horsepowerMax: event.target.value }))}
+                  placeholder="0"
+                />
+              </label>
+            </div>
+
+            <div className="range-row">
+              <label>
+                Price min
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={filters.priceMin}
+                  onChange={(event) => setFilters((previous) => ({ ...previous, priceMin: event.target.value }))}
+                  placeholder="0"
+                />
+              </label>
+              <label>
+                Price max
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={filters.priceMax}
+                  onChange={(event) => setFilters((previous) => ({ ...previous, priceMax: event.target.value }))}
+                  placeholder="0"
+                />
+              </label>
+            </div>
+
+            <label>
+              Sort
+              <select
+                value={filters.sort}
+                onChange={(event) => setFilters((previous) => ({ ...previous, sort: event.target.value }))}
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <div className="filter-actions">
+              <button type="submit" className="button primary">Apply filters</button>
+              <button type="button" className="button secondary" onClick={clearFilters}>Reset</button>
+            </div>
+          </form>
+        </aside>
+
+        <div>
+          {hasActiveFilters && <p className="muted">Showing filtered results</p>}
+          {loading && <p className="muted">Loading cars from API…</p>}
+          {error && <p role="alert" className="error-text">{error}</p>}
+
+          {!loading && !error && (
+            <>
+              <div className="cars-grid">
+                {cars.map((car) => <CarCard car={car} key={car.id} />)}
+              </div>
+
+              <div className="pagination-row">
+                <button type="button" className="button secondary" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+                  <ChevronLeft size={16} /> Previous
+                </button>
+                <span>Page {page} of {totalPages}</span>
+                <button type="button" className="button secondary" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
+                  Next <ChevronRight size={16} />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-
-      {loading && <p className="muted">Loading cars from API…</p>}
-      {error && <p role="alert" className="error-text">{error}</p>}
-
-      {!loading && !error && (
-        <>
-          <div className="cars-grid">
-            {processedCars.map((car) => <CarCard car={car} key={car.id} />)}
-          </div>
-
-          <div className="pagination-row">
-            <button type="button" className="button secondary" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
-              <ChevronLeft size={16} /> Previous
-            </button>
-            <span>Page {page} of {totalPages}</span>
-            <button type="button" className="button secondary" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
-              Next <ChevronRight size={16} />
-            </button>
-          </div>
-        </>
-      )}
     </section>
   );
 }

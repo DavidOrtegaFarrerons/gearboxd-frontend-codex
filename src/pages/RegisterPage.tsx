@@ -2,9 +2,10 @@ import { FormEvent, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Navigate, Link } from 'react-router-dom';
 import { register } from '../api/users';
-import { getSessionToken } from '../state/sessionToken';
+import { useAuth } from '../state/auth';
 
 export default function RegisterPage() {
+  const { isAuthenticated } = useAuth();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -12,7 +13,7 @@ export default function RegisterPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (getSessionToken()) return <Navigate to="/" replace />;
+  if (isAuthenticated) return <Navigate to="/" replace />;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
