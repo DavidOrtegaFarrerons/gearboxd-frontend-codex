@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IconGauge, IconHeart, IconPlus } from '../components/Icons';
+import { Gauge, Heart, Plus } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { getCar, type Car } from '../api/cars';
 
@@ -12,6 +12,7 @@ export default function CarDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
 
   useEffect(() => {
     if (!carId) {
@@ -36,6 +37,7 @@ export default function CarDetailPage() {
   }, [carId]);
 
   const origin = useMemo(() => (car ? originByMake[car.make.toLowerCase()] ?? 'Other' : 'Other'), [car]);
+  const activeRating = hoverRating || rating;
 
   if (loading) return <section className="content-wrap"><div className="panel">Loading car from API…</div></section>;
   if (error) return <section className="content-wrap"><div className="panel" role="alert">{error}</div></section>;
@@ -54,13 +56,13 @@ export default function CarDetailPage() {
 
       <div className="content-wrap section-space detail-main">
         <div className="action-row">
-          <button type="button" className="button primary"><IconGauge size={16} /> Log</button>
-          <button type="button" className="button secondary"><IconHeart size={16} /> Like</button>
-          <button type="button" className="button secondary"><IconPlus size={16} /> Add to Garage</button>
-          <div className="stars large">
+          <button type="button" className="button primary"><Gauge size={16} /> Log</button>
+          <button type="button" className="button secondary"><Heart size={16} /> Like</button>
+          <button type="button" className="button secondary"><Plus size={16} /> Add to Garage</button>
+          <div className="stars large" onMouseLeave={() => setHoverRating(0)}>
             {[1, 2, 3, 4, 5].map((value) => (
-              <button key={value} type="button" onMouseEnter={() => setRating(value)} onFocus={() => setRating(value)} onClick={() => setRating(value)}>
-                <span className={value <= rating ? 'filled' : ''}>★</span>
+              <button key={value} type="button" onMouseEnter={() => setHoverRating(value)} onFocus={() => setHoverRating(value)} onClick={() => setRating(value)}>
+                <span className={value <= activeRating ? 'filled' : ''}>★</span>
               </button>
             ))}
           </div>
@@ -77,7 +79,7 @@ export default function CarDetailPage() {
               <div><dt>Model</dt><dd>{car.model}</dd></div>
               <div><dt>Horsepower</dt><dd>{car.horsepower} hp</dd></div>
               <div><dt>Price</dt><dd>${car.price_new.toLocaleString()}</dd></div>
-              <div><dt>Body Type</dt><dd>{car.fuel === 'electric' ? 'Hatchback' : 'Coupé'}</dd></div>
+              <div><dt>Fuel</dt><dd>{car.fuel}</dd></div>
               <div><dt>Drivetrain</dt><dd>{car.drivetrain}</dd></div>
               <div><dt>Origin</dt><dd>{origin}</dd></div>
               <div><dt>Era</dt><dd>{eraLabel(car.year)}</dd></div>
@@ -87,9 +89,9 @@ export default function CarDetailPage() {
           <aside>
             <div className="panel stats-card">
               <h3>Quick Stats</h3>
-              <p className="avg-rating"><span>★</span> {(Math.max(3.8, rating || 4.2)).toFixed(1)}</p>
-              <p><strong>{Math.max(13, car.horsepower % 97)}</strong> drivers</p>
-              <p><strong>{Math.max(6, car.year % 23)}</strong> garages</p>
+              <p className="avg-rating"><span>★</span> {activeRating ? activeRating.toFixed(1) : '0.0'}</p>
+              <p><strong>0</strong> drivers <span className="meta">(API metric pending)</span></p>
+              <p><strong>0</strong> garages <span className="meta">(API metric pending)</span></p>
             </div>
           </aside>
         </div>

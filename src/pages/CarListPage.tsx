@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { IconChevronLeft, IconChevronRight, IconSearch } from '../components/Icons';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import CarCard from '../components/CarCard';
 import { listCars, type Car } from '../api/cars';
 
@@ -24,6 +24,8 @@ export default function CarListPage() {
   const [origin, setOrigin] = useState('All');
   const [sortBy, setSortBy] = useState('Name A–Z');
   const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [apiPageSize, setApiPageSize] = useState(20);
   const pageSize = 20;
 
   useEffect(() => {
@@ -34,6 +36,8 @@ export default function CarListPage() {
       try {
         const response = await listCars({ page, pageSize, sort: 'make' });
         setCars(response.items);
+        setTotal(response.total);
+        setApiPageSize(response.pageSize || pageSize);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load cars.');
       } finally {
@@ -45,7 +49,7 @@ export default function CarListPage() {
   }, [page]);
 
   const processedCars = useMemo(() => {
-    let next = [...cars].filter((car) => {
+    const next = [...cars].filter((car) => {
       const q = search.trim().toLowerCase();
       const searchMatch = !q || `${car.make} ${car.model} ${car.year}`.toLowerCase().includes(q);
       const carEra = eraLabel(car.year);
@@ -67,13 +71,14 @@ export default function CarListPage() {
   }, [cars, era, origin, search, sortBy]);
 
   const hasActiveFilters = Boolean(search.trim()) || era !== 'All' || origin !== 'All' || sortBy !== 'Name A–Z';
+  const totalPages = Math.max(1, Math.ceil(total / Math.max(1, apiPageSize)));
 
   return (
     <section className="content-wrap section-space">
       <h1 className="page-title">Cars</h1>
 
       <label className="search-wrap" htmlFor="catalog-search">
-        <IconSearch size={18} />
+        <Search size={18} />
         <input
           id="catalog-search"
           type="search"
@@ -85,15 +90,24 @@ export default function CarListPage() {
       </label>
 
       <div className="filter-row">
-        <select value={era} onChange={(e) => setEra(e.target.value)}>
-          <option>All</option><option>'60s</option><option>'70s</option><option>'80s</option><option>'90s</option><option>'00s</option><option>'10s</option><option>'20s</option>
-        </select>
-        <select value={origin} onChange={(e) => setOrigin(e.target.value)}>
-          <option>All</option><option>Japan</option><option>Germany</option><option>Italy</option><option>UK</option><option>USA</option><option>France</option><option>Sweden</option>
-        </select>
-        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-          <option>Name A–Z</option><option>Year ↑</option><option>Year ↓</option><option>Horsepower ↑</option><option>Horsepower ↓</option><option>Price ↑</option><option>Price ↓</option>
-        </select>
+        <label className="filter-pill">
+          <span>Era</span>
+          <select value={era} onChange={(e) => setEra(e.target.value)}>
+            <option>All</option><option>'60s</option><option>'70s</option><option>'80s</option><option>'90s</option><option>'00s</option><option>'10s</option><option>'20s</option>
+          </select>
+        </label>
+        <label className="filter-pill">
+          <span>Origin</span>
+          <select value={origin} onChange={(e) => setOrigin(e.target.value)}>
+            <option>All</option><option>Japan</option><option>Germany</option><option>Italy</option><option>UK</option><option>USA</option><option>France</option><option>Sweden</option>
+          </select>
+        </label>
+        <label className="filter-pill">
+          <span>Sort</span>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <option>Name A–Z</option><option>Year ↑</option><option>Year ↓</option><option>Horsepower ↑</option><option>Horsepower ↓</option><option>Price ↑</option><option>Price ↓</option>
+          </select>
+        </label>
         {hasActiveFilters && <button type="button" className="text-link-button" onClick={() => { setSearch(''); setEra('All'); setOrigin('All'); setSortBy('Name A–Z'); }}>Clear filters</button>}
       </div>
 
@@ -108,11 +122,11 @@ export default function CarListPage() {
 
           <div className="pagination-row">
             <button type="button" className="button secondary" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
-              <IconChevronLeft size={16} /> Previous
+              <ChevronLeft size={16} /> Previous
             </button>
-            <span>Page {page} of {Math.max(page, page + Number(processedCars.length === pageSize))}</span>
-            <button type="button" className="button secondary" onClick={() => setPage((p) => p + 1)} disabled={cars.length < pageSize}>
-              Next <IconChevronRight size={16} />
+            <span>Page {page} of {totalPages}</span>
+            <button type="button" className="button secondary" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
+              Next <ChevronRight size={16} />
             </button>
           </div>
         </>
