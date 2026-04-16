@@ -205,3 +205,14 @@ input:focus,select:focus,textarea:focus { outline: none; border-color: var(--bor
 }
 @media (min-width: 1024px) { .detail-grid { grid-template-columns: 70% 30%; } .footer-inner { grid-template-columns: 1fr auto; align-items: center; } }
 @media (max-width: 640px) { .hero-content h1 { font-size: var(--text-2xl); } }
+
+.catalog-layout { margin-top: var(--space-6); display: grid; gap: var(--space-6); align-items: start; }
+.filters-sidebar h2 { margin-bottom: var(--space-4); font-size: var(--text-lg); }
+.filters-form { display: grid; gap: var(--space-3); }
+.range-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.filter-actions { display: grid; gap: var(--space-3); margin-top: var(--space-2); }
+
+@media (min-width: 960px) {
+  .catalog-layout { grid-template-columns: 280px 1fr; }
+  .filters-sidebar { position: sticky; top: 80px; }
+}

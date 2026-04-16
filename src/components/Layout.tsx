@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { LogOut, Menu, Settings, User, X } from 'lucide-react';
 import { useAuth } from '../state/auth';
-import { clearSessionToken } from '../state/sessionToken';
 
 const loggedOutNav = [
   { to: '/cars', label: 'Cars' },
@@ -40,7 +39,6 @@ export default function Layout() {
   const navItems = isAuthenticated ? loggedInNav : loggedOutNav;
 
   const handleSignOut = () => {
-    clearSessionToken();
     logout();
     setMenuOpen(false);
   };

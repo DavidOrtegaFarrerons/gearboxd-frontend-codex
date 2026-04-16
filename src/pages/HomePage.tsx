@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listCars, type Car } from '../api/cars';
 import CarCard from '../components/CarCard';
-import { getSessionToken } from '../state/sessionToken';
+import { useAuth } from '../state/auth';
 
 export default function HomePage() {
   const [cars, setCars] = useState<Car[]>([]);
@@ -16,7 +16,7 @@ export default function HomePage() {
     void load();
   }, []);
 
-  const isLoggedIn = Boolean(getSessionToken());
+  const { isAuthenticated } = useAuth();
 
   return (
     <section>
@@ -32,7 +32,7 @@ export default function HomePage() {
 
       <div className="content-wrap section-space">
         <div className="section-head">
-          <h2>{isLoggedIn ? 'Your Recent Activity' : 'Popular Cars'}</h2>
+          <h2>{isAuthenticated ? 'Your Recent Activity' : 'Popular Cars'}</h2>
         </div>
         <div className="horizontal-cars">
           {cars.map((car) => (

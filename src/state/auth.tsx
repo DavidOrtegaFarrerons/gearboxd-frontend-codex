@@ -4,9 +4,8 @@ import React, {
   useContext,
   useMemo,
   useState,
-} from "react";
-
-const AUTH_TOKEN_KEY = "auth_token";
+} from 'react';
+import { clearSessionToken, getSessionToken, setSessionToken } from './sessionToken';
 
 export type AuthError = {
   status: number;
@@ -31,21 +30,13 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const getInitialToken = (): string | null => {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  return localStorage.getItem(AUTH_TOKEN_KEY);
-};
-
 const authErrorMessages: Record<number, string> = {
-  401: "Your session is not valid. Please log in and try again.",
-  403: "You do not have permission to perform this action.",
+  401: 'Your session is not valid. Please log in and try again.',
+  403: 'You do not have permission to perform this action.',
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => getInitialToken());
+  const [token, setToken] = useState<string | null>(() => getSessionToken());
   const [cacheResetHandlers, setCacheResetHandlers] = useState<Array<() => void>>(
     [],
   );
@@ -63,16 +54,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const persistToken = useCallback((nextToken: string | null) => {
     setToken(nextToken);
 
-    if (typeof window === "undefined") {
-      return;
-    }
-
     if (nextToken) {
-      localStorage.setItem(AUTH_TOKEN_KEY, nextToken);
+      setSessionToken(nextToken);
       return;
     }
 
-    localStorage.removeItem(AUTH_TOKEN_KEY);
+    clearSessionToken();
   }, []);
 
   const logout = useCallback(() => {
@@ -83,10 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
-      const response = await fetch("/v1/tokens/authentication", {
-        method: "POST",
+      const response = await fetch('/v1/tokens/authentication', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(credentials),
       });
@@ -95,17 +82,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw await parseAuthErrorResponse(response);
       }
 
-      const body = (await response.json()) as { token?: string };
+      const body = (await response.json()) as { token?: string; authentication_token?: { token?: string } };
+      const nextToken = body.token ?? body.authentication_token?.token;
 
-      if (!body.token) {
+      if (!nextToken) {
         throw {
           status: 500,
-          code: "TOKEN_MISSING",
-          message: "Authentication succeeded but no token was returned.",
+          code: 'TOKEN_MISSING',
+          message: 'Authentication succeeded but no token was returned.',
         } satisfies AuthError;
       }
 
-      persistToken(body.token);
+      persistToken(nextToken);
     },
     [persistToken],
   );
@@ -115,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const headers = new Headers(init?.headers ?? undefined);
 
       if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
+        headers.set('Authorization', `Bearer ${token}`);
       }
 
       return fetch(input, {
@@ -157,7 +145,7 @@ export function useAuth() {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
 
   return context;
@@ -210,13 +198,13 @@ export function useRequireAuthAction() {
     runOrPrompt,
     promptOpen,
     dismissPrompt,
-    promptMessage: "Please log in to perform this action.",
+    promptMessage: 'Please log in to perform this action.',
   };
 }
 
 export async function parseAuthErrorResponse(response: Response): Promise<AuthError> {
-  const defaultMessage = authErrorMessages[response.status] ??
-    "Something went wrong while processing your request.";
+  const defaultMessage = authErrorMessages[response.status]
+    ?? 'Something went wrong while processing your request.';
 
   try {
     const body = (await response.json()) as {
@@ -225,13 +213,13 @@ export async function parseAuthErrorResponse(response: Response): Promise<AuthEr
 
     return {
       status: response.status,
-      code: body.error?.code ?? "UNKNOWN_ERROR",
+      code: body.error?.code ?? 'UNKNOWN_ERROR',
       message: body.error?.message ?? defaultMessage,
     };
   } catch {
     return {
       status: response.status,
-      code: "UNKNOWN_ERROR",
+      code: 'UNKNOWN_ERROR',
       message: defaultMessage,
     };
   }
