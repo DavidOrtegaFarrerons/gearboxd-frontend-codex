@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { LogOut, Menu, Settings, User, X } from 'lucide-react';
 import { useAuth } from '../state/auth';
 
@@ -33,6 +33,7 @@ function LogoMark() {
 
 export default function Layout() {
   const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -41,6 +42,8 @@ export default function Layout() {
   const handleSignOut = () => {
     logout();
     setMenuOpen(false);
+    setMobileOpen(false);
+    navigate('/');
   };
 
   return (

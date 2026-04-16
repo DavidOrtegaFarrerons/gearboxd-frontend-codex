@@ -4,8 +4,8 @@ import { getApiErrorMessage, getApiFieldErrors, getFieldError, type FieldErrors 
 import { getSessionToken } from '../state/sessionToken';
 
 const bodyOptions = ['Sedan', 'Coupé', 'Roadster', 'Hatchback', 'SUV', 'Wagon', 'Truck', 'Van'];
-const gearboxOptions = ['Manual', 'Automatic', 'Semi-auto'];
-const fuelOptions = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
+const gearboxOptions = ['manual', 'automatic', 'DCT', 'CVT'];
+const fuelOptions = ['diesel', 'gas', 'electric', 'hybrid', 'plug-in-hybrid', 'hydrogen', 'lpg', 'cng'];
 const drivetrainOptions = ['FWD', 'RWD', 'AWD', '4WD'];
 
 const extractMetadata = (description: string | undefined) => {
@@ -26,10 +26,10 @@ export default function EditCarPage() {
     year: '',
     description: '',
     imageURL: '',
-    gearbox: 'Manual',
+    gearbox: 'manual',
     drivetrain: 'FWD',
     horsepower: '',
-    fuel: 'Petrol',
+    fuel: 'diesel',
     bodyType: 'Sedan',
     price: '',
   });
@@ -102,13 +102,13 @@ export default function EditCarPage() {
         <label>Model<input value={fields.model} onChange={(e) => setFields((p) => ({ ...p, model: e.target.value }))} />{getFieldError(fieldErrors, 'model') && <span className="error-text">{getFieldError(fieldErrors, 'model')}</span>}</label>
         <label>Year<input type="number" value={fields.year} onChange={(e) => setFields((p) => ({ ...p, year: e.target.value }))} />{getFieldError(fieldErrors, 'year') && <span className="error-text">{getFieldError(fieldErrors, 'year')}</span>}</label>
         <label>Body Type<select value={fields.bodyType} onChange={(e) => setFields((p) => ({ ...p, bodyType: e.target.value }))}>{bodyOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
-        <label>Gearbox<select value={fields.gearbox} onChange={(e) => setFields((p) => ({ ...p, gearbox: e.target.value }))}>{gearboxOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
-        <label>Fuel<select value={fields.fuel} onChange={(e) => setFields((p) => ({ ...p, fuel: e.target.value }))}>{fuelOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
+        <label>Gearbox<select value={fields.gearbox} onChange={(e) => setFields((p) => ({ ...p, gearbox: e.target.value }))}>{gearboxOptions.map((opt) => <option key={opt} value={opt}>{opt}</option>)}</select></label>
+        <label>Fuel<select value={fields.fuel} onChange={(e) => setFields((p) => ({ ...p, fuel: e.target.value }))}>{fuelOptions.map((opt) => <option key={opt} value={opt}>{opt}</option>)}</select></label>
         <label>Drivetrain<select value={fields.drivetrain} onChange={(e) => setFields((p) => ({ ...p, drivetrain: e.target.value }))}>{drivetrainOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Horsepower<input type="number" value={fields.horsepower} onChange={(e) => setFields((p) => ({ ...p, horsepower: e.target.value }))} />{getFieldError(fieldErrors, 'horsepower') && <span className="error-text">{getFieldError(fieldErrors, 'horsepower')}</span>}</label>
         <label>Price<input type="number" value={fields.price} onChange={(e) => setFields((p) => ({ ...p, price: e.target.value }))} />{getFieldError(fieldErrors, 'price_new', 'price') && <span className="error-text">{getFieldError(fieldErrors, 'price_new', 'price')}</span>}</label>
         <label>Description<textarea rows={4} value={fields.description} onChange={(e) => setFields((p) => ({ ...p, description: e.target.value }))} />{getFieldError(fieldErrors, 'description') && <span className="error-text">{getFieldError(fieldErrors, 'description')}</span>}</label>
-        <label>Image URL<input value={fields.imageURL} onChange={(e) => setFields((p) => ({ ...p, imageURL: e.target.value }))} />{getFieldError(fieldErrors, 'image_url', 'imageURL') && <span className="error-text">{getFieldError(fieldErrors, 'image_url', 'imageURL')}</span>}</label>
+        <label>Image URL<input required value={fields.imageURL} onChange={(e) => setFields((p) => ({ ...p, imageURL: e.target.value }))} />{getFieldError(fieldErrors, 'image_url', 'imageURL') && <span className="error-text">{getFieldError(fieldErrors, 'image_url', 'imageURL')}</span>}</label>
         <button type="submit" className="button primary full">Save Changes</button>
         <a href={`/cars/delete?id=${encodeURIComponent(carId)}`} className="button destructive" style={{ textAlign: 'center' }}>Delete this car</a>
         {message && <p className="success-text">{message}</p>}

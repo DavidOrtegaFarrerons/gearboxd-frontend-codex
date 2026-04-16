@@ -1,12 +1,12 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { createCar } from '../api/cars';
 import { getApiErrorMessage, getApiFieldErrors, getFieldError, type FieldErrors } from '../api/errors';
 import { getSessionToken } from '../state/sessionToken';
 
 const bodyOptions = ['Sedan', 'Coupé', 'Roadster', 'Hatchback', 'SUV', 'Wagon', 'Truck', 'Van'];
 const drivetrainOptions = ['FWD', 'RWD', 'AWD', '4WD'];
-const gearboxOptions = ['Manual', 'Automatic', 'Semi-auto'];
-const fuelOptions = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
+const gearboxOptions = ['manual', 'automatic', 'DCT', 'CVT'];
+const fuelOptions = ['diesel', 'gas', 'electric', 'hybrid', 'plug-in-hybrid', 'hydrogen', 'lpg', 'cng'];
 
 export default function CreateCarPage() {
   const [form, setForm] = useState({
@@ -17,19 +17,14 @@ export default function CreateCarPage() {
     price: '',
     bodyType: 'Sedan',
     drivetrain: 'FWD',
-    gearbox: 'Manual',
-    fuel: 'Petrol',
+    gearbox: 'manual',
+    fuel: 'diesel',
     description: '',
     imageURL: '',
   });
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors | undefined>(undefined);
-
-  const era = useMemo(() => {
-    const year = Number(form.year);
-    return Number.isFinite(year) && year > 1900 ? `'${String(year).slice(2, 3)}0s` : '—';
-  }, [form.year]);
 
   const onChange = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -74,11 +69,10 @@ export default function CreateCarPage() {
         <label>Price<input type="number" required value={form.price} onChange={(e) => onChange('price', e.target.value)} />{getFieldError(fieldErrors, 'price_new', 'price') && <span className="error-text">{getFieldError(fieldErrors, 'price_new', 'price')}</span>}</label>
         <label>Body Type<select value={form.bodyType} onChange={(e) => onChange('bodyType', e.target.value)}>{bodyOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Drivetrain<select value={form.drivetrain} onChange={(e) => onChange('drivetrain', e.target.value)}>{drivetrainOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
-        <label>Gearbox<select value={form.gearbox} onChange={(e) => onChange('gearbox', e.target.value)}>{gearboxOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
-        <label>Fuel<select value={form.fuel} onChange={(e) => onChange('fuel', e.target.value)}>{fuelOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
-        <label>Era<span className="badge badge-era readonly">{era}</span></label>
+        <label>Gearbox<select value={form.gearbox} onChange={(e) => onChange('gearbox', e.target.value)}>{gearboxOptions.map((opt) => <option key={opt} value={opt}>{opt}</option>)}</select></label>
+        <label>Fuel<select value={form.fuel} onChange={(e) => onChange('fuel', e.target.value)}>{fuelOptions.map((opt) => <option key={opt} value={opt}>{opt}</option>)}</select></label>
         <label>Description<textarea rows={4} required value={form.description} onChange={(e) => onChange('description', e.target.value)} />{getFieldError(fieldErrors, 'description') && <span className="error-text">{getFieldError(fieldErrors, 'description')}</span>}</label>
-        <label>Image URL (optional)<input value={form.imageURL} onChange={(e) => onChange('imageURL', e.target.value)} />{getFieldError(fieldErrors, 'image_url', 'imageURL') && <span className="error-text">{getFieldError(fieldErrors, 'image_url', 'imageURL')}</span>}</label>
+        <label>Image URL<input required value={form.imageURL} onChange={(e) => onChange('imageURL', e.target.value)} />{getFieldError(fieldErrors, 'image_url', 'imageURL') && <span className="error-text">{getFieldError(fieldErrors, 'image_url', 'imageURL')}</span>}</label>
         <button type="submit" className="button primary full">Add Car</button>
         {message && <p className="success-text">{message}</p>}
         {error && <p className="error-text">{error}</p>}
