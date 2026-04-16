@@ -23,8 +23,18 @@ export default function HealthcheckPage() {
 
   return (
     <section className="content-wrap section-space auth-wrap">
-      <div className="panel health-card">
-        <h1 className="centered">System Status</h1>
+      <div className="panel health-card about-card">
+        <h1 className="centered">About Gearboxd</h1>
+        <p className="left-copy">
+          Gearboxd is a Go-powered car community inspired by Letterboxd, but tuned for engines instead of films.
+          Log every car you&apos;ve driven, post opinions, rate what deserves a spot in your dream garage, and discover
+          what other drivers think about everything from humble hatchbacks to wild supercars.
+        </p>
+        <p className="left-copy">
+          This front-end talks to a Go API and keeps the experience simple: browse, review, and build your own running
+          history of automotive obsessions.
+        </p>
+        <h2 className="centered">API Status</h2>
         <p className="status-line"><span className="pulse-dot" />{status}</p>
         <p className="meta">Environment: production</p>
         <p className="meta">Version: {version}</p>
