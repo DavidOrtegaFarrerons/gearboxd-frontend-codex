@@ -6,11 +6,13 @@ import React, {
   useState,
 } from 'react';
 import { clearSessionToken, getSessionToken, setSessionToken } from './sessionToken';
+import { extractFieldErrors, type FieldErrors } from '../api/errors';
 
 export type AuthError = {
   status: number;
   code: string;
   message: string;
+  fieldErrors?: FieldErrors;
 };
 
 export type LoginCredentials = {
@@ -210,11 +212,14 @@ export async function parseAuthErrorResponse(response: Response): Promise<AuthEr
     const body = (await response.json()) as {
       error?: { code?: string; message?: string };
     };
+    const fieldErrors = extractFieldErrors(body);
+    const firstFieldError = fieldErrors ? Object.values(fieldErrors)[0] : undefined;
 
     return {
       status: response.status,
       code: body.error?.code ?? 'UNKNOWN_ERROR',
-      message: body.error?.message ?? defaultMessage,
+      message: body.error?.message ?? firstFieldError ?? defaultMessage,
+      fieldErrors,
     };
   } catch {
     return {

@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { getCar, updateCar } from '../api/cars';
+import { getFieldError, type FieldErrors } from '../api/errors';
 import { getSessionToken } from '../state/sessionToken';
 
 const bodyOptions = ['Sedan', 'Coupé', 'Roadster', 'Hatchback', 'SUV', 'Wagon', 'Truck', 'Van'];
@@ -38,11 +39,13 @@ export default function EditCarPage() {
   });
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors | undefined>(undefined);
 
   const fillFromCar = async () => {
     if (!carId) return;
     setMessage(null);
     setError(null);
+    setFieldErrors(undefined);
     try {
       const car = await getCar(carId);
       const metadata = extractMetadata(car.description);
@@ -89,7 +92,13 @@ export default function EditCarPage() {
       }, token);
       setMessage(`Updated car ${updated.id}.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update car.');
+      if (err && typeof err === 'object' && 'message' in err) {
+        const typedError = err as { message?: string; fieldErrors?: FieldErrors };
+        setError(typedError.message ?? 'Failed to update car.');
+        setFieldErrors(typedError.fieldErrors);
+      } else {
+        setError('Failed to update car.');
+      }
     }
   };
 
@@ -99,18 +108,18 @@ export default function EditCarPage() {
       <form onSubmit={handleSubmit} className="panel narrow-form">
         <label>Car ID<input required value={carId} onChange={(e) => setCarId(e.target.value)} /></label>
         <button type="button" className="button secondary" onClick={fillFromCar}>Load existing values</button>
-        <label>Make<input value={fields.make} onChange={(e) => setFields((p) => ({ ...p, make: e.target.value }))} /></label>
-        <label>Model<input value={fields.model} onChange={(e) => setFields((p) => ({ ...p, model: e.target.value }))} /></label>
-        <label>Year<input type="number" value={fields.year} onChange={(e) => setFields((p) => ({ ...p, year: e.target.value }))} /></label>
+        <label>Make<input value={fields.make} onChange={(e) => setFields((p) => ({ ...p, make: e.target.value }))} />{getFieldError(fieldErrors, 'make') && <span className="error-text">{getFieldError(fieldErrors, 'make')}</span>}</label>
+        <label>Model<input value={fields.model} onChange={(e) => setFields((p) => ({ ...p, model: e.target.value }))} />{getFieldError(fieldErrors, 'model') && <span className="error-text">{getFieldError(fieldErrors, 'model')}</span>}</label>
+        <label>Year<input type="number" value={fields.year} onChange={(e) => setFields((p) => ({ ...p, year: e.target.value }))} />{getFieldError(fieldErrors, 'year') && <span className="error-text">{getFieldError(fieldErrors, 'year')}</span>}</label>
         <label>Body Type<select value={fields.bodyType} onChange={(e) => setFields((p) => ({ ...p, bodyType: e.target.value }))}>{bodyOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Origin<select value={fields.origin} onChange={(e) => setFields((p) => ({ ...p, origin: e.target.value }))}>{originOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Gearbox<select value={fields.gearbox} onChange={(e) => setFields((p) => ({ ...p, gearbox: e.target.value }))}>{gearboxOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Fuel<select value={fields.fuel} onChange={(e) => setFields((p) => ({ ...p, fuel: e.target.value }))}>{fuelOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Drivetrain<select value={fields.drivetrain} onChange={(e) => setFields((p) => ({ ...p, drivetrain: e.target.value }))}>{drivetrainOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
-        <label>Horsepower<input type="number" value={fields.horsepower} onChange={(e) => setFields((p) => ({ ...p, horsepower: e.target.value }))} /></label>
-        <label>Price<input type="number" value={fields.price} onChange={(e) => setFields((p) => ({ ...p, price: e.target.value }))} /></label>
-        <label>Description<textarea rows={4} value={fields.description} onChange={(e) => setFields((p) => ({ ...p, description: e.target.value }))} /></label>
-        <label>Image URL<input value={fields.imageURL} onChange={(e) => setFields((p) => ({ ...p, imageURL: e.target.value }))} /></label>
+        <label>Horsepower<input type="number" value={fields.horsepower} onChange={(e) => setFields((p) => ({ ...p, horsepower: e.target.value }))} />{getFieldError(fieldErrors, 'horsepower') && <span className="error-text">{getFieldError(fieldErrors, 'horsepower')}</span>}</label>
+        <label>Price<input type="number" value={fields.price} onChange={(e) => setFields((p) => ({ ...p, price: e.target.value }))} />{getFieldError(fieldErrors, 'price_new', 'price') && <span className="error-text">{getFieldError(fieldErrors, 'price_new', 'price')}</span>}</label>
+        <label>Description<textarea rows={4} value={fields.description} onChange={(e) => setFields((p) => ({ ...p, description: e.target.value }))} />{getFieldError(fieldErrors, 'description') && <span className="error-text">{getFieldError(fieldErrors, 'description')}</span>}</label>
+        <label>Image URL<input value={fields.imageURL} onChange={(e) => setFields((p) => ({ ...p, imageURL: e.target.value }))} />{getFieldError(fieldErrors, 'image_url', 'imageURL') && <span className="error-text">{getFieldError(fieldErrors, 'image_url', 'imageURL')}</span>}</label>
         <button type="submit" className="button primary full">Save Changes</button>
         <a href={`/cars/delete?id=${encodeURIComponent(carId)}`} className="button destructive" style={{ textAlign: 'center' }}>Delete this car</a>
         {message && <p className="success-text">{message}</p>}

@@ -1,8 +1,11 @@
+import { extractFieldErrors, type FieldErrors } from './errors';
+
 export type ApiError = {
   status: number;
   code: string;
   message: string;
   details?: unknown;
+  fieldErrors?: FieldErrors;
 };
 
 export type RequestOptions = Omit<RequestInit, 'body' | 'headers'> & {
@@ -35,6 +38,8 @@ async function parseJson(response: Response): Promise<unknown> {
 
 function normalizeApiError(response: Response, payload: unknown): ApiError {
   const fallbackMessage = response.statusText || 'Request failed.';
+  const fieldErrors = extractFieldErrors(payload);
+  const firstFieldError = fieldErrors ? Object.values(fieldErrors)[0] : undefined;
 
   if (payload && typeof payload === 'object') {
     const record = payload as Record<string, unknown>;
@@ -52,7 +57,7 @@ function normalizeApiError(response: Response, payload: unknown): ApiError {
       ? nestedError.message
       : typeof record.message === 'string'
         ? record.message
-        : fallbackMessage;
+        : firstFieldError ?? fallbackMessage;
 
     const details = nestedError?.details ?? record.details;
 
@@ -61,13 +66,15 @@ function normalizeApiError(response: Response, payload: unknown): ApiError {
       code,
       message,
       details,
+      fieldErrors,
     };
   }
 
   return {
     status: response.status,
     code: 'API_ERROR',
-    message: fallbackMessage,
+    message: firstFieldError ?? fallbackMessage,
+    fieldErrors,
   };
 }
 

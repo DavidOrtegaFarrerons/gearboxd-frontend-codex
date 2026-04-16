@@ -1,7 +1,9 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import CarCard from '../components/CarCard';
 import { listCars, type Car, type ListCarsParams } from '../api/cars';
+import { useAuth } from '../state/auth';
 
 type CarFilterValues = {
   make: string;
@@ -83,6 +85,7 @@ function toParams(filters: CarFilterValues, page: number, pageSize: number): Lis
 }
 
 export default function CarListPage() {
+  const { isAuthenticated } = useAuth();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -134,7 +137,10 @@ export default function CarListPage() {
 
   return (
     <section className="content-wrap section-space">
-      <h1 className="page-title">Cars</h1>
+      <div className="page-head">
+        <h1 className="page-title">Cars</h1>
+        {isAuthenticated && <Link className="button primary" to="/cars/create">+ Add New Car</Link>}
+      </div>
 
       <div className="catalog-layout">
         <aside className="filters-sidebar panel" aria-label="Car filters">
