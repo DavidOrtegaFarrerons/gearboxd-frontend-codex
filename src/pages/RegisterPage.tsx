@@ -43,12 +43,12 @@ export default function RegisterPage() {
             <input type="text" required value={username} onChange={(e) => setUsername(e.target.value)} />
             {getFieldError(fieldErrors, 'username') && <span className="error-text">{getFieldError(fieldErrors, 'username')}</span>}
           </label>
-          <label>
+          <label className="auth-label-spaced">
             <span className="field-label">Email</span>
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             {getFieldError(fieldErrors, 'email') && <span className="error-text">{getFieldError(fieldErrors, 'email')}</span>}
           </label>
-          <label>
+          <label className="auth-label-spaced">
             <span className="field-label">Password</span>
             <span className="password-field-wrap">
               <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)} />

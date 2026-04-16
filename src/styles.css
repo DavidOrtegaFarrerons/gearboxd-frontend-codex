@@ -169,6 +169,7 @@ p { color: var(--text-secondary); line-height: var(--leading-normal); margin: 0 
 .auth-logo { text-align: center; font-weight: 700; margin-bottom: var(--space-4); }
 
 .auth-form label { gap: var(--space-2); }
+.auth-label-spaced { margin-top: var(--space-2); }
 .field-label { display: inline-block; margin-bottom: var(--space-1); }
 .auth-form input,
 .auth-form select,
@@ -223,7 +224,7 @@ input:focus,select:focus,textarea:focus { outline: none; border-color: var(--bor
 .catalog-layout { margin-top: var(--space-6); display: grid; gap: var(--space-6); align-items: start; }
 .filters-sidebar h2 { margin-bottom: var(--space-4); font-size: var(--text-lg); }
 .filters-form { display: grid; gap: var(--space-4); }
-.range-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.range-row { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
 .filter-actions { display: grid; gap: var(--space-3); margin-top: var(--space-2); }
 .catalog-results { min-width: 0; }
 .filters-toggle { justify-content: center; }
@@ -253,7 +254,7 @@ input:focus,select:focus,textarea:focus { outline: none; border-color: var(--bor
   .logo span { font-size: var(--text-base); }
   .mobile-overlay { padding: var(--space-4); }
   .mobile-overlay nav { margin-top: var(--space-8); }
-  .range-row { grid-template-columns: 1fr; gap: var(--space-3); }
+  .range-row { gap: var(--space-3); }
   .filter-actions .button { width: 100%; justify-content: center; }
   .cars-grid { gap: var(--space-4); grid-template-columns: 1fr; }
 }
