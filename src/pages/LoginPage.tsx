@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
-import { getFieldError, type FieldErrors } from '../api/errors';
+import { getApiErrorMessage, getApiFieldErrors, getFieldError, type FieldErrors } from '../api/errors';
 import { useAuth } from '../state/auth';
 
 export default function LoginPage() {
@@ -26,17 +26,8 @@ export default function LoginPage() {
       setMessage('Signed in successfully.');
       navigate('/');
     } catch (err) {
-      const defaultMessage = 'Login failed.';
-
-      if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
-        setError(err.message);
-        if ('fieldErrors' in err) {
-          const errorWithFields = err as { fieldErrors?: FieldErrors };
-          setFieldErrors(errorWithFields.fieldErrors);
-        }
-      } else {
-        setError(defaultMessage);
-      }
+      setError(getApiErrorMessage(err, 'Login failed.'));
+      setFieldErrors(getApiFieldErrors(err));
     }
   };
 
@@ -46,14 +37,14 @@ export default function LoginPage() {
         <div className="auth-logo">Gearboxd</div>
         <h1 className="centered">Welcome back</h1>
         <p className="centered muted">Sign in to your Gearboxd account</p>
-        <form onSubmit={handleSubmit} className="narrow-form">
+        <form onSubmit={handleSubmit} className="narrow-form auth-form">
           <label>
-            Email
+            <span className="field-label">Email</span>
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             {getFieldError(fieldErrors, 'email', 'username') && <span className="error-text">{getFieldError(fieldErrors, 'email', 'username')}</span>}
           </label>
           <label>
-            Password
+            <span className="field-label">Password</span>
             <span className="password-field-wrap">
               <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)} />
               <button

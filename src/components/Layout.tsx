@@ -11,7 +11,6 @@ const loggedOutNav = [
 const loggedInNav = [
   { to: '/cars', label: 'Cars' },
   { to: '/cars/create', label: 'Add Car' },
-  { to: '/cars', label: 'My Garage' },
   { to: '/', label: 'Activity' },
 ];
 

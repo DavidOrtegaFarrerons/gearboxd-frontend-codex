@@ -2,7 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Navigate, Link } from 'react-router-dom';
 import { register } from '../api/users';
-import { getFieldError, type FieldErrors } from '../api/errors';
+import { getApiErrorMessage, getApiFieldErrors, getFieldError, type FieldErrors } from '../api/errors';
 import { useAuth } from '../state/auth';
 
 export default function RegisterPage() {
@@ -26,13 +26,8 @@ export default function RegisterPage() {
       await register({ email, username, password });
       setMessage('Registration submitted. Check your email for activation instructions.');
     } catch (err) {
-      if (err && typeof err === 'object' && 'message' in err) {
-        const typedError = err as { message?: string; fieldErrors?: FieldErrors };
-        setError(typedError.message ?? 'Registration failed.');
-        setFieldErrors(typedError.fieldErrors);
-      } else {
-        setError('Registration failed.');
-      }
+      setError(getApiErrorMessage(err, 'Registration failed.'));
+      setFieldErrors(getApiFieldErrors(err));
     }
   };
 
@@ -42,19 +37,19 @@ export default function RegisterPage() {
         <div className="auth-logo">Gearboxd</div>
         <h1 className="centered">Create your account</h1>
         <p className="centered muted">Track every car. Build your dream garage.</p>
-        <form onSubmit={handleSubmit} className="narrow-form">
+        <form onSubmit={handleSubmit} className="narrow-form auth-form">
           <label>
-            Username
+            <span className="field-label">Username</span>
             <input type="text" required value={username} onChange={(e) => setUsername(e.target.value)} />
             {getFieldError(fieldErrors, 'username') && <span className="error-text">{getFieldError(fieldErrors, 'username')}</span>}
           </label>
           <label>
-            Email
+            <span className="field-label">Email</span>
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             {getFieldError(fieldErrors, 'email') && <span className="error-text">{getFieldError(fieldErrors, 'email')}</span>}
           </label>
           <label>
-            Password
+            <span className="field-label">Password</span>
             <span className="password-field-wrap">
               <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)} />
               <button

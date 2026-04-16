@@ -1,10 +1,9 @@
 import { FormEvent, useState } from 'react';
 import { getCar, updateCar } from '../api/cars';
-import { getFieldError, type FieldErrors } from '../api/errors';
+import { getApiErrorMessage, getApiFieldErrors, getFieldError, type FieldErrors } from '../api/errors';
 import { getSessionToken } from '../state/sessionToken';
 
 const bodyOptions = ['Sedan', 'Coupé', 'Roadster', 'Hatchback', 'SUV', 'Wagon', 'Truck', 'Van'];
-const originOptions = ['Japan', 'Germany', 'Italy', 'UK', 'USA', 'France', 'Sweden', 'South Korea', 'Other'];
 const gearboxOptions = ['Manual', 'Automatic', 'Semi-auto'];
 const fuelOptions = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
 const drivetrainOptions = ['FWD', 'RWD', 'AWD', '4WD'];
@@ -12,13 +11,11 @@ const drivetrainOptions = ['FWD', 'RWD', 'AWD', '4WD'];
 const extractMetadata = (description: string | undefined) => {
   const text = description ?? '';
   const bodyType = text.match(/\[Body Type: ([^\]]+)\]/)?.[1] ?? 'Sedan';
-  const origin = text.match(/\[Origin: ([^\]]+)\]/)?.[1] ?? 'Other';
   const plainDescription = text
     .replace(/\[Body Type: ([^\]]+)\]\s*/g, '')
-    .replace(/\[Origin: ([^\]]+)\]\s*/g, '')
     .trim();
 
-  return { bodyType, origin, plainDescription };
+  return { bodyType, plainDescription };
 };
 
 export default function EditCarPage() {
@@ -34,7 +31,6 @@ export default function EditCarPage() {
     horsepower: '',
     fuel: 'Petrol',
     bodyType: 'Sedan',
-    origin: 'Other',
     price: '',
   });
   const [message, setMessage] = useState<string | null>(null);
@@ -60,11 +56,10 @@ export default function EditCarPage() {
         horsepower: String(car.horsepower),
         fuel: car.fuel,
         bodyType: metadata.bodyType,
-        origin: metadata.origin,
         price: String(car.price_new),
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to load car.');
+      setError(getApiErrorMessage(err, 'Unable to load car.'));
     }
   };
 
@@ -77,7 +72,7 @@ export default function EditCarPage() {
     if (!token) return setError('Missing token. Log in first.');
 
     try {
-      const metadataPrefix = `[Body Type: ${fields.bodyType}] [Origin: ${fields.origin}]`;
+      const metadataPrefix = `[Body Type: ${fields.bodyType}]`;
       const updated = await updateCar(carId, {
         make: fields.make,
         model: fields.model,
@@ -92,13 +87,8 @@ export default function EditCarPage() {
       }, token);
       setMessage(`Updated car ${updated.id}.`);
     } catch (err) {
-      if (err && typeof err === 'object' && 'message' in err) {
-        const typedError = err as { message?: string; fieldErrors?: FieldErrors };
-        setError(typedError.message ?? 'Failed to update car.');
-        setFieldErrors(typedError.fieldErrors);
-      } else {
-        setError('Failed to update car.');
-      }
+      setError(getApiErrorMessage(err, 'Failed to update car.'));
+      setFieldErrors(getApiFieldErrors(err));
     }
   };
 
@@ -112,7 +102,6 @@ export default function EditCarPage() {
         <label>Model<input value={fields.model} onChange={(e) => setFields((p) => ({ ...p, model: e.target.value }))} />{getFieldError(fieldErrors, 'model') && <span className="error-text">{getFieldError(fieldErrors, 'model')}</span>}</label>
         <label>Year<input type="number" value={fields.year} onChange={(e) => setFields((p) => ({ ...p, year: e.target.value }))} />{getFieldError(fieldErrors, 'year') && <span className="error-text">{getFieldError(fieldErrors, 'year')}</span>}</label>
         <label>Body Type<select value={fields.bodyType} onChange={(e) => setFields((p) => ({ ...p, bodyType: e.target.value }))}>{bodyOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
-        <label>Origin<select value={fields.origin} onChange={(e) => setFields((p) => ({ ...p, origin: e.target.value }))}>{originOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Gearbox<select value={fields.gearbox} onChange={(e) => setFields((p) => ({ ...p, gearbox: e.target.value }))}>{gearboxOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Fuel<select value={fields.fuel} onChange={(e) => setFields((p) => ({ ...p, fuel: e.target.value }))}>{fuelOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Drivetrain<select value={fields.drivetrain} onChange={(e) => setFields((p) => ({ ...p, drivetrain: e.target.value }))}>{drivetrainOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>

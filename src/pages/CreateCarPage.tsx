@@ -1,11 +1,10 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { createCar } from '../api/cars';
-import { getFieldError, type FieldErrors } from '../api/errors';
+import { getApiErrorMessage, getApiFieldErrors, getFieldError, type FieldErrors } from '../api/errors';
 import { getSessionToken } from '../state/sessionToken';
 
 const bodyOptions = ['Sedan', 'Coupé', 'Roadster', 'Hatchback', 'SUV', 'Wagon', 'Truck', 'Van'];
 const drivetrainOptions = ['FWD', 'RWD', 'AWD', '4WD'];
-const originOptions = ['Japan', 'Germany', 'Italy', 'UK', 'USA', 'France', 'Sweden', 'South Korea', 'Other'];
 const gearboxOptions = ['Manual', 'Automatic', 'Semi-auto'];
 const fuelOptions = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
 
@@ -18,7 +17,6 @@ export default function CreateCarPage() {
     price: '',
     bodyType: 'Sedan',
     drivetrain: 'FWD',
-    origin: 'Japan',
     gearbox: 'Manual',
     fuel: 'Petrol',
     description: '',
@@ -45,7 +43,7 @@ export default function CreateCarPage() {
     if (!token) return setError('Missing token. Log in first.');
 
     try {
-      const metadataPrefix = `[Body Type: ${form.bodyType}] [Origin: ${form.origin}]`;
+      const metadataPrefix = `[Body Type: ${form.bodyType}]`;
       const created = await createCar({
         make: form.make,
         model: form.model,
@@ -60,13 +58,8 @@ export default function CreateCarPage() {
       }, token);
       setMessage(`Created car ${created.id}.`);
     } catch (err) {
-      if (err && typeof err === 'object' && 'message' in err) {
-        const typedError = err as { message?: string; fieldErrors?: FieldErrors };
-        setError(typedError.message ?? 'Failed to create car.');
-        setFieldErrors(typedError.fieldErrors);
-      } else {
-        setError('Failed to create car.');
-      }
+      setError(getApiErrorMessage(err, 'Failed to create car.'));
+      setFieldErrors(getApiFieldErrors(err));
     }
   };
 
@@ -81,7 +74,6 @@ export default function CreateCarPage() {
         <label>Price<input type="number" required value={form.price} onChange={(e) => onChange('price', e.target.value)} />{getFieldError(fieldErrors, 'price_new', 'price') && <span className="error-text">{getFieldError(fieldErrors, 'price_new', 'price')}</span>}</label>
         <label>Body Type<select value={form.bodyType} onChange={(e) => onChange('bodyType', e.target.value)}>{bodyOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Drivetrain<select value={form.drivetrain} onChange={(e) => onChange('drivetrain', e.target.value)}>{drivetrainOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
-        <label>Origin<select value={form.origin} onChange={(e) => onChange('origin', e.target.value)}>{originOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Gearbox<select value={form.gearbox} onChange={(e) => onChange('gearbox', e.target.value)}>{gearboxOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Fuel<select value={form.fuel} onChange={(e) => onChange('fuel', e.target.value)}>{fuelOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Era<span className="badge badge-era readonly">{era}</span></label>

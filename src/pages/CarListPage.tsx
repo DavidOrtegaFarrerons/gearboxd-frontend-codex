@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import CarCard from '../components/CarCard';
 import { listCars, type Car, type ListCarsParams } from '../api/cars';
+import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../state/auth';
 
 type CarFilterValues = {
@@ -107,7 +108,7 @@ export default function CarListPage() {
         setTotal(response.total);
         setApiPageSize(response.pageSize || pageSize);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load cars.');
+        setError(getApiErrorMessage(err, 'Failed to load cars.'));
       } finally {
         setLoading(false);
       }

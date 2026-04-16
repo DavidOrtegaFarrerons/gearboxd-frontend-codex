@@ -166,6 +166,13 @@ p { color: var(--text-secondary); line-height: var(--leading-normal); margin: 0 
 .auth-submit-button { margin-top: var(--space-2); }
 .auth-bottom-text { margin-top: var(--space-4); }
 .auth-logo { text-align: center; font-weight: 700; margin-bottom: var(--space-4); }
+
+.auth-form label { gap: var(--space-2); }
+.field-label { display: inline-block; margin-bottom: var(--space-1); }
+.auth-form input,
+.auth-form select,
+.auth-form textarea,
+.auth-form .password-field-wrap { margin-top: var(--space-1); }
 label { display:grid; gap: var(--space-3); color: var(--text-secondary); font-size: var(--text-sm); font-weight: var(--font-medium); }
 input,select,textarea { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-input); border-radius: var(--border-radius-md); padding: 12px 16px; font-size: var(--text-base); transition: border-color .15s ease; }
 input::placeholder,textarea::placeholder { color: var(--text-tertiary); }

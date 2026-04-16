@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { deleteCar, getCar } from '../api/cars';
+import { getApiErrorMessage } from '../api/errors';
 import { getSessionToken } from '../state/sessionToken';
 
 export default function DeleteCarPage() {
@@ -15,14 +16,17 @@ export default function DeleteCarPage() {
     const loadCar = async () => {
       if (!carId) {
         setCarName(null);
+        setError(null);
         return;
       }
 
       try {
         const car = await getCar(carId);
         setCarName(`${car.year} ${car.make} ${car.model}`);
-      } catch {
+        setError(null);
+      } catch (err) {
         setCarName(null);
+        setError(getApiErrorMessage(err, 'Unable to load car details.'));
       }
     };
 
@@ -42,7 +46,7 @@ export default function DeleteCarPage() {
       await deleteCar(carId, token);
       setMessage(`Deleted car ${carId}.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete car.');
+      setError(getApiErrorMessage(err, 'Failed to delete car.'));
     }
   };
 

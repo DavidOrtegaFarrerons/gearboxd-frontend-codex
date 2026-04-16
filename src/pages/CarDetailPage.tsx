@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Gauge, Heart, Plus } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import { getCar, type Car } from '../api/cars';
-
-const originByMake: Record<string, string> = { mazda: 'Japan', bmw: 'Germany', porsche: 'Germany', ford: 'USA', ferrari: 'Italy' };
+import { getApiErrorMessage } from '../api/errors';
 const eraLabel = (year: number) => `'${String(year).slice(2, 3)}0s`;
 
 export default function CarDetailPage() {
@@ -27,7 +26,7 @@ export default function CarDetailPage() {
       try {
         setCar(await getCar(carId));
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load car details.');
+        setError(getApiErrorMessage(err, 'Failed to load car details.'));
       } finally {
         setLoading(false);
       }
@@ -36,7 +35,6 @@ export default function CarDetailPage() {
     void loadCar();
   }, [carId]);
 
-  const origin = useMemo(() => (car ? originByMake[car.make.toLowerCase()] ?? 'Other' : 'Other'), [car]);
   const activeRating = hoverRating || rating;
 
   if (loading) return <section className="content-wrap"><div className="panel">Loading car from API…</div></section>;
@@ -50,7 +48,7 @@ export default function CarDetailPage() {
         <div className="detail-overlay" />
         <div className="detail-title content-wrap">
           <h1>{car.year} {car.make} {car.model}</h1>
-          <p>{car.make} · {origin} · {eraLabel(car.year)}</p>
+          <p>{car.make} · {eraLabel(car.year)}</p>
         </div>
       </div>
 
@@ -81,7 +79,6 @@ export default function CarDetailPage() {
               <div><dt>Price</dt><dd>${car.price_new.toLocaleString()}</dd></div>
               <div><dt>Fuel</dt><dd>{car.fuel}</dd></div>
               <div><dt>Drivetrain</dt><dd>{car.drivetrain}</dd></div>
-              <div><dt>Origin</dt><dd>{origin}</dd></div>
               <div><dt>Era</dt><dd>{eraLabel(car.year)}</dd></div>
             </dl>
           </div>
