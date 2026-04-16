@@ -45,9 +45,9 @@ const sortOptions = [
   { value: '-price', label: 'Price (High to low)' },
 ];
 
-const gearboxOptions = ['', 'Manual', 'Automatic', 'CVT', 'DCT'];
+const gearboxOptions = ['', 'manual', 'automatic', 'DCT', 'CVT'];
 const drivetrainOptions = ['', 'FWD', 'RWD', 'AWD', '4WD'];
-const fuelOptions = ['', 'Petrol', 'Diesel', 'Hybrid', 'Electric', 'LPG'];
+const fuelOptions = ['', 'diesel', 'gas', 'electric', 'hybrid', 'plug-in-hybrid', 'hydrogen', 'lpg', 'cng'];
 
 function toInt(value: string): number | undefined {
   if (!value.trim()) {
@@ -95,6 +95,7 @@ export default function CarListPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [apiPageSize, setApiPageSize] = useState(20);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const pageSize = 20;
 
   useEffect(() => {
@@ -121,12 +122,14 @@ export default function CarListPage() {
     event.preventDefault();
     setPage(1);
     setAppliedFilters(filters);
+    setMobileFiltersOpen(false);
   };
 
   const clearFilters = () => {
     setFilters(defaultFilters);
     setAppliedFilters(defaultFilters);
     setPage(1);
+    setMobileFiltersOpen(false);
   };
 
   const hasActiveFilters = useMemo(
@@ -140,11 +143,26 @@ export default function CarListPage() {
     <section className="content-wrap section-space">
       <div className="page-head">
         <h1 className="page-title">Cars</h1>
-        {isAuthenticated && <Link className="button primary" to="/cars/create">+ Add New Car</Link>}
+        <div className="page-head-actions">
+          <button
+            type="button"
+            className="button secondary filters-toggle"
+            onClick={() => setMobileFiltersOpen((previous) => !previous)}
+            aria-expanded={mobileFiltersOpen}
+            aria-controls="car-filters"
+          >
+            {mobileFiltersOpen ? 'Hide Filters' : 'Show Filters'}
+          </button>
+          {isAuthenticated && <Link className="button primary" to="/cars/create">+ Add New Car</Link>}
+        </div>
       </div>
 
       <div className="catalog-layout">
-        <aside className="filters-sidebar panel" aria-label="Car filters">
+        <aside
+          id="car-filters"
+          className={`filters-sidebar panel ${mobileFiltersOpen ? 'is-open' : ''}`}
+          aria-label="Car filters"
+        >
           <h2>Filters</h2>
 
           <form onSubmit={handleFilterSubmit} className="filters-form">
