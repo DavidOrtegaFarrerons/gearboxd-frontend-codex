@@ -6,6 +6,7 @@ import React, {
   useState,
 } from 'react';
 import { clearSessionToken, getSessionToken, setSessionToken } from './sessionToken';
+import { getAuthenticationToken } from '../api/auth';
 import { extractFieldErrors, type FieldErrors } from '../api/errors';
 
 export type AuthError = {
@@ -72,30 +73,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
-      const response = await fetch('/v1/tokens/authentication', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
+      try {
+        const { token: nextToken } = await getAuthenticationToken(credentials);
+        persistToken(nextToken);
+      } catch (error) {
+        if (
+          error
+          && typeof error === 'object'
+          && 'status' in error
+          && 'code' in error
+          && 'message' in error
+        ) {
+          throw error as AuthError;
+        }
 
-      if (!response.ok) {
-        throw await parseAuthErrorResponse(response);
-      }
-
-      const body = (await response.json()) as { token?: string; authentication_token?: { token?: string } };
-      const nextToken = body.token ?? body.authentication_token?.token;
-
-      if (!nextToken) {
         throw {
           status: 500,
-          code: 'TOKEN_MISSING',
-          message: 'Authentication succeeded but no token was returned.',
+          code: 'AUTHENTICATION_FAILED',
+          message: 'Login failed.',
         } satisfies AuthError;
       }
-
-      persistToken(nextToken);
     },
     [persistToken],
   );
