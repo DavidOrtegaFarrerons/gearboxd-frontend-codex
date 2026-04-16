@@ -5,9 +5,24 @@ import { getSessionToken } from '../state/sessionToken';
 const bodyOptions = ['Sedan', 'Coupé', 'Roadster', 'Hatchback', 'SUV', 'Wagon', 'Truck', 'Van'];
 const drivetrainOptions = ['FWD', 'RWD', 'AWD', '4WD'];
 const originOptions = ['Japan', 'Germany', 'Italy', 'UK', 'USA', 'France', 'Sweden', 'South Korea', 'Other'];
+const gearboxOptions = ['Manual', 'Automatic', 'Semi-auto'];
+const fuelOptions = ['Petrol', 'Diesel', 'Electric', 'Hybrid'];
 
 export default function CreateCarPage() {
-  const [form, setForm] = useState({ make: '', model: '', year: '', horsepower: '', price: '', bodyType: 'Sedan', drivetrain: 'FWD', origin: 'Japan', description: '', imageURL: '' });
+  const [form, setForm] = useState({
+    make: '',
+    model: '',
+    year: '',
+    horsepower: '',
+    price: '',
+    bodyType: 'Sedan',
+    drivetrain: 'FWD',
+    origin: 'Japan',
+    gearbox: 'Manual',
+    fuel: 'Petrol',
+    description: '',
+    imageURL: '',
+  });
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,16 +42,17 @@ export default function CreateCarPage() {
     if (!token) return setError('Missing token. Log in first.');
 
     try {
+      const metadataPrefix = `[Body Type: ${form.bodyType}] [Origin: ${form.origin}]`;
       const created = await createCar({
         make: form.make,
         model: form.model,
         year: Number(form.year),
-        description: form.description,
+        description: `${metadataPrefix} ${form.description}`.trim(),
         image_url: form.imageURL,
-        gearbox: form.bodyType,
+        gearbox: form.gearbox,
         drivetrain: form.drivetrain,
         horsepower: Number(form.horsepower),
-        fuel: form.origin,
+        fuel: form.fuel,
         price_new: Number(form.price),
       }, token);
       setMessage(`Created car ${created.id}.`);
@@ -57,6 +73,8 @@ export default function CreateCarPage() {
         <label>Body Type<select value={form.bodyType} onChange={(e) => onChange('bodyType', e.target.value)}>{bodyOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Drivetrain<select value={form.drivetrain} onChange={(e) => onChange('drivetrain', e.target.value)}>{drivetrainOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Origin<select value={form.origin} onChange={(e) => onChange('origin', e.target.value)}>{originOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
+        <label>Gearbox<select value={form.gearbox} onChange={(e) => onChange('gearbox', e.target.value)}>{gearboxOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
+        <label>Fuel<select value={form.fuel} onChange={(e) => onChange('fuel', e.target.value)}>{fuelOptions.map((opt) => <option key={opt}>{opt}</option>)}</select></label>
         <label>Era<span className="badge badge-era readonly">{era}</span></label>
         <label>Description<textarea rows={4} required value={form.description} onChange={(e) => onChange('description', e.target.value)} /></label>
         <label>Image URL (optional)<input value={form.imageURL} onChange={(e) => onChange('imageURL', e.target.value)} /></label>
