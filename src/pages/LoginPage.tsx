@@ -43,7 +43,7 @@ export default function LoginPage() {
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             {getFieldError(fieldErrors, 'email', 'username') && <span className="error-text">{getFieldError(fieldErrors, 'email', 'username')}</span>}
           </label>
-          <label>
+          <label className="auth-label-spaced">
             <span className="field-label">Password</span>
             <span className="password-field-wrap">
               <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)} />
