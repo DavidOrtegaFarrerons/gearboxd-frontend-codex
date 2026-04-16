@@ -282,7 +282,7 @@ export default function CarListPage() {
           </form>
         </aside>
 
-        <div>
+        <div className="catalog-results">
           {hasActiveFilters && <p className="muted">Showing filtered results</p>}
           {loading && <p className="muted">Loading cars from API…</p>}
           {error && <p role="alert" className="error-text">{error}</p>}
