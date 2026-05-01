@@ -12,6 +12,24 @@ export type Car = {
   horsepower: number;
   fuel: string;
   price_new: number;
+  car_logs: CarLog[];
+};
+
+export type CarLogStatus = 'want_to_drive' | 'driven' | 'owned';
+
+export type CarLog = {
+  id: string;
+  user_id: string;
+  rating: number;
+  status: CarLogStatus;
+  comment?: string;
+};
+
+export type AddCarLogPayload = {
+  car_id: number;
+  rating: number;
+  status: CarLogStatus;
+  comment?: string;
 };
 
 export type CarCreatePayload = {
@@ -64,7 +82,26 @@ type ApiCar = {
   horsepower: number | string;
   fuel: string;
   price_new: number | string;
+  car_logs?: ApiCarLog[];
 };
+
+type ApiCarLog = {
+  id: number | string;
+  user_id: number | string;
+  rating: number | string;
+  status: CarLogStatus;
+  comment?: string;
+};
+
+function normalizeCarLog(payload: ApiCarLog): CarLog {
+  return {
+    id: String(payload.id),
+    user_id: String(payload.user_id),
+    rating: toNumber(payload.rating),
+    status: payload.status,
+    comment: payload.comment,
+  };
+}
 
 type ApiListResponse = {
   cars?: ApiCar[];
@@ -127,6 +164,7 @@ function normalizeCar(payload: ApiCar): Car {
     horsepower: toNumber(payload.horsepower),
     fuel: payload.fuel,
     price_new: toNumber(payload.price_new),
+    car_logs: (payload.car_logs ?? []).map(normalizeCarLog),
   };
 }
 
@@ -200,6 +238,24 @@ export async function updateCar(id: string, payload: CarUpdatePayload, token: st
 export function deleteCar(id: string, token: string): Promise<void> {
   return http<void>(`/v1/cars/${id}`, {
     method: 'DELETE',
+    token,
+  });
+}
+
+export async function addCarLog(payload: AddCarLogPayload, token: string): Promise<void> {
+  await http('/v1/car_logs', {
+    method: 'POST',
+    body: payload,
+    token,
+  });
+}
+
+export async function deleteCarLog(carId: number, token: string): Promise<void> {
+  await http('/v1/car_logs', {
+    method: 'DELETE',
+    body: {
+      car_id: carId,
+    },
     token,
   });
 }

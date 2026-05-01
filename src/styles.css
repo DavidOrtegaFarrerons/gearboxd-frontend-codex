@@ -160,6 +160,14 @@ p { color: var(--text-secondary); line-height: var(--leading-normal); margin: 0 
 .spec-list dt { color: var(--text-tertiary); text-transform: uppercase; font-size: var(--text-sm); }
 .spec-list dd { margin: 0; color: var(--text-primary); }
 .stats-card .avg-rating { font-size: 2rem; color: var(--accent-orange); }
+.log-form { display: grid; gap: var(--space-4); }
+.log-list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-4); }
+.log-list li { border: 1px solid var(--border-subtle); border-radius: var(--border-radius-md); padding: var(--space-4); background: var(--bg-tertiary); }
+.log-list li.is-user-comment { background: rgba(64, 188, 244, 0.12); border-color: var(--accent-blue); }
+.log-list p { margin-bottom: var(--space-2); }
+.comment-rating { color: var(--accent-orange); }
+.comment-panel h2 { margin-bottom: var(--space-4); }
+.user-comment-badge { display: inline-flex; margin-bottom: var(--space-2); padding: 4px 10px; border-radius: var(--border-radius-full); background: rgba(64, 188, 244, 0.2); color: var(--text-primary); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .04em; }
 
 .form-page .narrow-form { max-width: 560px; margin: 0 auto; display:grid; gap: var(--space-6); }
 .auth-wrap { display: flex; justify-content: center; }
