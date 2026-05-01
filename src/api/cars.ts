@@ -196,10 +196,13 @@ function normalizeCarResponse(payload: unknown): Car {
     throw new Error('Invalid car response from API.');
   }
 
-  const response = payload as { car?: ApiCar } & ApiCar;
+  const response = payload as { car?: ApiCar; car_logs?: ApiCarLog[] } & ApiCar;
   const car = response.car ?? response;
 
-  return normalizeCar(car);
+  return normalizeCar({
+    ...car,
+    car_logs: car.car_logs ?? response.car_logs ?? [],
+  });
 }
 
 export async function listCars(params?: ListCarsParams): Promise<ListCarsResponse> {
